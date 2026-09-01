@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<!-- =====================================================================
+     Brisa e Lamentações - Livro do Jogador
+     Estrutura multi-arquivo:
+       index.html      -> marcação / estrutura das seções
+       css/styles.css  -> estilos
+       js/data.js      -> dados base + mecânicas + reações (estáticos)
+       js/app.js       -> lógica (navegação, CRUD, fichas, persistência)
+     ===================================================================== -->
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brisa e Lamentações - Livro do Jogador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-title">Brisa e<br>Lamentações</div>
+      <div class="brand-sub">Livro do Jogador · Interativo</div>
+    </div>
+    <nav class="tabs" id="tabNav">
+      <button class="tab-btn active" data-tab="inicio"><span class="ico">◆</span> Início</button>
+      <button class="tab-btn" data-tab="mecanicas"><span class="ico">⚙</span> Mecânicas</button>
+      <button class="tab-btn" data-tab="racas"><span class="ico">⛰</span> Raças</button>
+      <button class="tab-btn" data-tab="classes"><span class="ico">⚔</span> Classes &amp; Caminhos</button>
+      <button class="tab-btn" data-tab="magias"><span class="ico">✦</span> Magias</button>
+      <button class="tab-btn" data-tab="tecnicas"><span class="ico">✺</span> Técnicas</button>
+      <button class="tab-btn" data-tab="equipamentos"><span class="ico">▣</span> Equipamentos</button>
+      <button class="tab-btn" data-tab="particularidades"><span class="ico">✦</span> Particularidades</button>
+      <button class="tab-btn" data-tab="reacoes"><span class="ico">↯</span> Reações</button>
+      <button class="tab-btn" data-tab="personagens"><span class="ico">☺</span> Personagens</button>
+    </nav>
+    <div class="sidebar-foot">
+      <button class="mini-btn" id="btnExport">⇩ Exportar dados (.json)</button>
+      <button class="mini-btn" id="btnImport">⇧ Importar dados (.json)</button>
+      <button class="mini-btn" id="btnReset">↺ Restaurar tudo ao original</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none">
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ================= INÍCIO ================= -->
+    <section class="section active" id="tab-inicio">
+      <div class="hero">
+        <h1>Brisa e Lamentações</h1>
+        <p>Um sistema de RPG que herda de D&amp;D a estrutura de Atributos, Classes, Raças e Níveis, e do Daggerheart o motor de resolução por Duality Dice (2d12, Hope e Fear), com os recursos próprios de Mana, Prana, Lucidez, Caminhos e Experiences.</p>
+        <div class="duality">
+          <div class="die hope">
+            <b>Hope</b>
+            <p>Quando o dado de Hope supera o de Fear num sucesso, o personagem gera Mana (classes mágicas, +3) ou Prana (classes físicas, +1) imediatamente.</p>
+          </div>
+          <div class="die fear">
+            <b>Fear</b>
+            <p>Quando o dado de Fear supera o de Hope num sucesso, o teste funciona mas o Mestre pode introduzir complicação, reação inimiga ou perda leve de Lucidez (1 a 3).</p>
+          </div>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat"><b id="statRacas">-</b><span>RAÇAS</span></div>
+          <div class="hero-stat"><b id="statClasses">-</b><span>CLASSES</span></div>
+          <div class="hero-stat"><b id="statMagias">-</b><span>MAGIAS</span></div>
+          <div class="hero-stat"><b id="statTecnicas">-</b><span>TÉCNICAS</span></div>
+          <div class="hero-stat"><b id="statItens">-</b><span>ITENS</span></div>
+          <div class="hero-stat"><b id="statPersonagens">-</b><span>PERSONAGENS</span></div>
+        </div>
+      </div>
+
+      <div class="ref-grid">
+        <div class="ref-card">
+          <h3>Como usar este livro</h3>
+          <p>Cada seção do menu lateral é um módulo independente: você pode <b style="color:var(--text)">adicionar</b>, <b style="color:var(--text)">editar</b> ou <b style="color:var(--text)">remover</b> raças, classes, magias, técnicas, itens e personagens livremente. Tudo é salvo automaticamente no seu navegador.</p>
+          <p>Use "Exportar dados" para guardar um backup, e "Restaurar tudo ao original" para voltar ao conteúdo base do livro a qualquer momento.</p>
+        </div>
+        <div class="ref-card">
+          <h3>Distribuição de Atributos (criação)</h3>
+          <table><tbody>
+            <tr><td class="k">1 Atributo</td><td>+2</td></tr>
+            <tr><td class="k">2 Atributos</td><td>+1</td></tr>
+            <tr><td class="k">2 Atributos</td><td>+0</td></tr>
+            <tr><td class="k">1 Atributo</td><td>-1</td></tr>
+          </tbody></table>
+          <p style="margin-top:8px;">Some sempre +3 no total. Depois some o Bônus Simples da Raça. Nenhum atributo passa de +3 (ou fica abaixo de -1) no nível 1.</p>
+        </div>
+        <div class="ref-card">
+          <h3>Recursos iniciais por tipo de Classe</h3>
+          <table><tbody>
+            <tr><td class="k">Vida (Física)</td><td>7</td></tr>
+            <tr><td class="k">Vida (Mágica)</td><td>6</td></tr>
+            <tr><td class="k">Lucidez (Física)</td><td>80</td></tr>
+            <tr><td class="k">Lucidez (Mágica)</td><td>100</td></tr>
+            <tr><td class="k">Evasão base</td><td>10 + Agilidade</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MECÂNICAS ================= -->
+    <section class="section" id="tab-mecanicas">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Mecânicas Básicas</div>
+          <div class="section-desc">Referência rápida das regras centrais: dados, dificuldades, condições, descanso, progressão e o sistema de Trauma e Lucidez.</div>
+        </div>
+      </div>
+      <div class="ref-grid" id="mecanicasGrid"></div>
+    </section>
+
+    <!-- ================= RAÇAS ================= -->
+    <section class="section" id="tab-racas">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Raças</div>
+          <div class="section-desc">A ancestralidade do personagem. Cada raça tem um Bônus Simples e de 2 a 3 Traços Marcantes.</div>
+        </div>
+        <div class="section-actions"><button class="btn btn-primary" onclick="openRaceForm()">+ Nova raça</button></div>
+      </div>
+      <div class="toolbar">
+        <div class="search-wrap"><input class="input" id="searchRacas" placeholder="Buscar raça..." oninput="renderRacas()"></div>
+      </div>
+      <div class="grid" id="gridRacas"></div>
+    </section>
+
+    <!-- ================= CLASSES ================= -->
+    <section class="section" id="tab-classes">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Classes &amp; Caminhos</div>
+          <div class="section-desc">A forma fundamental como o personagem enfrenta o mundo - recurso principal, características, Impulso e as duas árvores de Caminho.</div>
+        </div>
+        <div class="section-actions"><button class="btn btn-primary" onclick="openClassForm()">+ Nova classe</button></div>
+      </div>
+      <div class="toolbar">
+        <div class="search-wrap"><input class="input" id="searchClasses" placeholder="Buscar classe..." oninput="renderClasses()"></div>
+        <div class="chip-filter" id="filterClassType">
+          <div class="chip active" data-val="">Todas</div>
+          <div class="chip" data-val="Física">Físicas</div>
+          <div class="chip" data-val="Mágica">Mágicas</div>
+        </div>
+      </div>
+      <div class="grid" id="gridClasses"></div>
+    </section>
+
+    <!-- ================= MAGIAS ================= -->
+    <section class="section" id="tab-magias">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Lista de Magias</div>
+          <div class="section-desc">Lista base e modelo - não é exaustiva. Novas magias podem seguir a mesma estrutura de Círculo, Classe, custo de Mana e Atributo.</div>
+        </div>
+        <div class="section-actions"><button class="btn btn-primary" onclick="openSpellForm()">+ Nova magia</button></div>
+      </div>
+      <div class="toolbar">
+        <div class="search-wrap"><input class="input" id="searchMagias" placeholder="Buscar magia..." oninput="renderSpells()"></div>
+        <select class="input" id="filterMagiaClasse" onchange="renderSpells()"></select>
+      </div>
+      <div class="grid" id="gridMagias"></div>
+    </section>
+
+    <!-- ================= TÉCNICAS ================= -->
+    <section class="section" id="tab-tecnicas">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Lista de Técnicas</div>
+          <div class="section-desc">O equivalente físico das magias - habilidades marciais que consomem Prana, organizadas por Grau, Classe e Tipo.</div>
+        </div>
+        <div class="section-actions"><button class="btn btn-primary" onclick="openTechForm()">+ Nova técnica</button></div>
+      </div>
+      <div class="toolbar">
+        <div class="search-wrap"><input class="input" id="searchTecnicas" placeholder="Buscar técnica..." oninput="renderTechs()"></div>
+        <select class="input" id="filterTecClasse" onchange="renderTechs()"></select>
+      </div>
+      <div class="grid" id="gridTecnicas"></div>
+    </section>
+
+    <!-- ================= EQUIPAMENTOS ================= -->
+    <section class="section" id="tab-equipamentos">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Equipamentos</div>
+          <div class="section-desc">Armas, armaduras, ferramentas mágicas e consumíveis. Tier limita o que o personagem pode equipar (acompanha o nível).</div>
+        </div>
+        <div class="section-actions"><button class="btn btn-primary" onclick="openItemForm()">+ Novo item</button></div>
+      </div>
+      <div class="toolbar">
+        <div class="search-wrap"><input class="input" id="searchItens" placeholder="Buscar item..." oninput="renderItems()"></div>
+        <div class="chip-filter" id="filterItemCat">
+          <div class="chip active" data-val="">Todos</div>
+          <div class="chip" data-val="Arma">Armas</div>
+          <div class="chip" data-val="Armadura">Armaduras</div>
+          <div class="chip" data-val="Ferramenta Mágica">Ferramentas Mágicas</div>
+          <div class="chip" data-val="Consumível">Consumíveis</div>
+          <div class="chip" data-val="Item Mágico">Itens Mágicos</div>
+        </div>
+      </div>
+      <div class="grid" id="gridItens"></div>
+    </section>
+
+    <!-- ================= PARTICULARIDADES ================= -->
+    <section class="section" id="tab-particularidades">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Particularidades</div>
+          <div class="section-desc">Características, conhecimentos, hábitos, condições e especializações que podem alterar diretamente as regras do personagem.</div>
+        </div>
+        <div class="section-actions"><button class="btn btn-primary" onclick="openParticularidadeForm()">+ Nova particularidade</button></div>
+      </div>
+      <div class="toolbar"><div class="search-wrap"><input class="input" id="searchParticularidades" placeholder="Buscar particularidade..." oninput="renderParticularidades()"></div></div>
+      <div class="grid" id="gridParticularidades"></div>
+    </section>
+
+    <!-- ================= REAÇÕES ================= -->
+    <section class="section" id="tab-reacoes">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Reações</div>
+          <div class="section-desc">Respostas imediatas ao que acontece na ficção. Reações não dependem de turnos ou iniciativa: elas são ativadas por gatilhos dentro do Holofote.</div>
+        </div>
+      </div>
+      <div class="grid" id="gridReacoes"></div>
+    </section>
+
+    <!-- ================= PERSONAGENS ================= -->
+    <section class="section" id="tab-personagens">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Personagens</div>
+          <div class="section-desc">Crie e acompanhe as fichas do seu grupo - Vida, Mana/Prana e Lucidez calculados a partir de Raça e Classe.</div>
+        </div>
+        <div class="section-actions"><button class="btn btn-primary" onclick="openCharForm()">+ Novo personagem</button></div>
+      </div>
+      <div id="charListWrap">
+        <div class="char-grid" id="gridPersonagens"></div>
+      </div>
+      <div id="charSheetWrap"></div>
+    </section>
+
+  </main>
+</div>
+
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal" id="modalBox"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

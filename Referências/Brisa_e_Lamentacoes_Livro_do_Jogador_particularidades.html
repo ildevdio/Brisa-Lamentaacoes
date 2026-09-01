@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brisa e Lamentações - Livro do Jogador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#12161d;
+  --bg-soft:#171c25;
+  --panel:#1d232e;
+  --panel-2:#232a36;
+  --border:#2e3744;
+  --border-soft:#262e3a;
+  --text:#e8eaee;
+  --text-dim:#9aa6b6;
+  --text-faint:#6b7686;
+  --hope:#e0ab47;
+  --hope-dim:#8a6a34;
+  --fear:#c14b5f;
+  --fear-dim:#7a3540;
+  --brisa:#5fb8c9;
+  --brisa-dim:#3a7480;
+  --lament:#9b7fc7;
+  --lament-dim:#5f4d80;
+  --good:#5fae82;
+  --radius:10px;
+  --radius-lg:16px;
+  --shadow:0 8px 24px rgba(0,0,0,.35);
+  --font-display:'Cinzel', serif;
+  --font-body:'Source Sans 3', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(ellipse at top left, rgba(95,184,201,.05), transparent 45%),
+    radial-gradient(ellipse at bottom right, rgba(155,127,199,.06), transparent 50%),
+    var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  min-height:100vh;
+  line-height:1.5;
+}
+::selection{background:var(--brisa-dim);color:#fff;}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px;}
+::-webkit-scrollbar-thumb:hover{background:var(--brisa-dim);}
+
+a{color:var(--brisa);}
+
+/* ---------- Layout shell ---------- */
+.app{display:flex;min-height:100vh;}
+
+.sidebar{
+  width:230px;
+  flex-shrink:0;
+  background:linear-gradient(180deg, var(--bg-soft), var(--bg));
+  border-right:1px solid var(--border-soft);
+  padding:22px 14px;
+  position:sticky;
+  top:0;
+  height:100vh;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:22px;
+}
+.brand{padding:0 8px;}
+.brand-title{
+  font-family:var(--font-display);
+  font-size:19px;
+  font-weight:600;
+  letter-spacing:.02em;
+  line-height:1.25;
+  background:linear-gradient(120deg, var(--brisa), var(--lament) 70%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+.brand-sub{font-size:11.5px;color:var(--text-faint);margin-top:4px;letter-spacing:.03em;}
+
+nav.tabs{display:flex;flex-direction:column;gap:2px;}
+.tab-btn{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;
+  border-radius:8px;
+  color:var(--text-dim);
+  font-size:14px;
+  font-weight:500;
+  cursor:pointer;
+  border:1px solid transparent;
+  background:transparent;
+  transition:background .15s, color .15s;
+  text-align:left;
+  width:100%;
+}
+.tab-btn .ico{width:18px;text-align:center;font-size:14px;opacity:.85;}
+.tab-btn:hover{background:var(--panel);color:var(--text);}
+.tab-btn.active{background:var(--panel-2);color:var(--text);border-color:var(--border);}
+.tab-btn.active .ico{color:var(--brisa);}
+
+.sidebar-foot{margin-top:auto;display:flex;flex-direction:column;gap:8px;}
+.mini-btn{
+  font-size:12px;
+  color:var(--text-faint);
+  background:none;
+  border:1px dashed var(--border);
+  border-radius:8px;
+  padding:7px 8px;
+  cursor:pointer;
+  text-align:left;
+}
+.mini-btn:hover{color:var(--text-dim);border-color:var(--text-faint);}
+
+.main{flex:1;min-width:0;padding:26px 34px 60px;max-width:1180px;}
+@media(max-width:900px){
+  .app{flex-direction:column;}
+  .sidebar{width:100%;height:auto;position:relative;flex-direction:row;flex-wrap:wrap;align-items:center;padding:14px;gap:10px;}
+  nav.tabs{flex-direction:row;flex-wrap:wrap;}
+  .sidebar-foot{flex-direction:row;margin-top:0;margin-left:auto;}
+  .main{padding:20px 16px 60px;}
+}
+
+.section{display:none;}
+.section.active{display:block;animation:fadein .25s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+.section-head{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
+  margin-bottom:18px;flex-wrap:wrap;
+}
+.section-title{font-family:var(--font-display);font-size:26px;font-weight:600;}
+.section-desc{color:var(--text-dim);font-size:14px;max-width:640px;margin-top:6px;}
+.section-actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+/* ---------- Buttons ---------- */
+.btn{
+  font-family:var(--font-body);
+  font-size:13.5px;font-weight:600;
+  padding:9px 15px;border-radius:8px;
+  border:1px solid var(--border);
+  background:var(--panel-2);
+  color:var(--text);
+  cursor:pointer;
+  display:inline-flex;align-items:center;gap:6px;
+  transition:transform .1s, border-color .15s, background .15s;
+  white-space:nowrap;
+}
+.btn:hover{border-color:var(--brisa-dim);background:var(--panel);}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:linear-gradient(135deg, var(--brisa-dim), var(--brisa) 130%);border-color:var(--brisa);color:#0d1116;}
+.btn-primary:hover{filter:brightness(1.08);}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--text-dim);}
+.btn-ghost:hover{color:var(--text);background:var(--panel);}
+.btn-danger{border-color:var(--fear-dim);color:var(--fear);background:transparent;}
+.btn-danger:hover{background:rgba(193,75,95,.12);}
+.btn-sm{padding:5px 10px;font-size:12px;border-radius:6px;}
+
+/* ---------- Search / filter bar ---------- */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;align-items:center;}
+.input, select.input, textarea.input{
+  font-family:var(--font-body);
+  background:var(--panel);
+  border:1px solid var(--border);
+  color:var(--text);
+  border-radius:8px;
+  padding:9px 12px;
+  font-size:13.5px;
+  outline:none;
+}
+.input:focus, select.input:focus, textarea.input:focus{border-color:var(--brisa-dim);}
+.search-wrap{position:relative;flex:1;min-width:180px;max-width:340px;}
+.search-wrap .input{width:100%;padding-left:32px;}
+.search-wrap::before{content:"⌕";position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text-faint);font-size:15px;}
+.chip-filter{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{
+  font-size:12px;padding:6px 11px;border-radius:99px;
+  border:1px solid var(--border);color:var(--text-dim);cursor:pointer;background:var(--panel);
+}
+.chip.active{background:var(--brisa-dim);border-color:var(--brisa);color:#fff;}
+
+/* ---------- Cards / grid ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.card{
+  background:var(--panel);
+  border:1px solid var(--border-soft);
+  border-radius:var(--radius-lg);
+  padding:16px 17px;
+  position:relative;
+  display:flex;flex-direction:column;gap:8px;
+  transition:border-color .15s, transform .12s;
+}
+.card:hover{border-color:var(--brisa-dim);}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.card-title{font-family:var(--font-display);font-size:16.5px;font-weight:600;line-height:1.3;}
+.card-tag{
+  font-size:10.5px;font-weight:600;letter-spacing:.03em;
+  padding:3px 8px;border-radius:99px;white-space:nowrap;
+  border:1px solid var(--border);color:var(--text-dim);
+}
+.tag-fisica{border-color:var(--fear-dim);color:var(--fear);}
+.tag-magica{border-color:var(--brisa-dim);color:var(--brisa);}
+.tag-custom{border-color:var(--lament-dim);color:var(--lament);}
+.card-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--text-dim);}
+.card-meta b{color:var(--text);font-weight:600;}
+.card-body{font-size:13px;color:var(--text-dim);line-height:1.55;}
+.card-foot{display:flex;gap:6px;margin-top:auto;padding-top:8px;}
+.card-foot .btn{flex:1;justify-content:center;}
+
+.trait-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;}
+.trait-list li{font-size:12.5px;color:var(--text-dim);padding-left:14px;position:relative;}
+.trait-list li::before{content:"—";position:absolute;left:0;color:var(--brisa-dim);}
+.trait-list b{color:var(--text);}
+
+.empty-state{
+  border:1px dashed var(--border);border-radius:var(--radius-lg);
+  padding:40px 20px;text-align:center;color:var(--text-faint);
+}
+.empty-state .btn{margin-top:12px;}
+
+/* ---------- Reference / mechanics blocks ---------- */
+.ref-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:18px 0 28px;}
+.ref-card{
+  background:var(--panel);border:1px solid var(--border-soft);border-radius:var(--radius-lg);
+  padding:16px 18px;
+}
+.ref-card h3{font-family:var(--font-display);font-size:15px;margin:0 0 8px;font-weight:600;color:var(--brisa);}
+.ref-card p{font-size:13px;color:var(--text-dim);margin:0 0 6px;line-height:1.55;}
+.ref-card table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px;}
+.ref-card td{padding:4px 2px;border-top:1px solid var(--border-soft);color:var(--text-dim);}
+.ref-card tr:first-child td{border-top:none;}
+.ref-card td.k{color:var(--text);font-weight:600;width:40%;}
+
+.hero{
+  border:1px solid var(--border-soft);
+  border-radius:var(--radius-lg);
+  padding:26px 28px;
+  margin-bottom:26px;
+  background:
+    linear-gradient(135deg, rgba(95,184,201,.09), rgba(155,127,199,.08)),
+    var(--panel);
+  position:relative;
+  overflow:hidden;
+}
+.hero h1{font-family:var(--font-display);font-size:28px;margin:0 0 8px;font-weight:700;letter-spacing:.01em;}
+.hero p{color:var(--text-dim);font-size:14.5px;max-width:640px;margin:0 0 4px;}
+.hero-stats{display:flex;gap:26px;margin-top:18px;flex-wrap:wrap;}
+.hero-stat b{display:block;font-family:var(--font-display);font-size:22px;color:var(--brisa);}
+.hero-stat span{font-size:11.5px;color:var(--text-faint);letter-spacing:.02em;}
+
+.duality{display:flex;gap:14px;margin-top:16px;flex-wrap:wrap;}
+.die{
+  flex:1;min-width:150px;border-radius:12px;padding:14px 16px;
+  border:1px solid var(--border-soft);
+}
+.die.hope{background:linear-gradient(160deg, rgba(224,171,71,.14), transparent);border-color:var(--hope-dim);}
+.die.fear{background:linear-gradient(160deg, rgba(193,75,95,.14), transparent);border-color:var(--fear-dim);}
+.die b{font-family:var(--font-display);font-size:14px;}
+.die.hope b{color:var(--hope);}
+.die.fear b{color:var(--fear);}
+.die p{font-size:12.5px;color:var(--text-dim);margin:6px 0 0;}
+
+/* ---------- Modal ---------- */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(8,10,14,.65);backdrop-filter:blur(2px);
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:40px 16px;overflow-y:auto;z-index:100;
+}
+.modal-overlay.hidden{display:none;}
+.modal{
+  background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--radius-lg);
+  width:100%;max-width:620px;padding:24px 26px 26px;box-shadow:var(--shadow);
+  animation:modalIn .18s ease;
+}
+@keyframes modalIn{from{opacity:0;transform:translateY(10px) scale(.98);}to{opacity:1;transform:none;}}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.modal-head h2{font-family:var(--font-display);font-size:19px;margin:0;font-weight:600;}
+.modal-close{background:none;border:none;color:var(--text-faint);font-size:20px;cursor:pointer;line-height:1;padding:4px;}
+.modal-close:hover{color:var(--text);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-grid .full{grid-column:1/-1;}
+.field label{display:block;font-size:12px;color:var(--text-dim);margin-bottom:5px;font-weight:600;letter-spacing:.01em;}
+.field .hint{font-size:11px;color:var(--text-faint);margin-top:4px;}
+.field textarea.input{width:100%;min-height:70px;resize:vertical;font-family:var(--font-body);}
+.field input.input, .field select.input{width:100%;}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;}
+
+/* ---------- Toast ---------- */
+.toast{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--panel-2);border:1px solid var(--brisa-dim);color:var(--text);
+  padding:10px 18px;border-radius:99px;font-size:13px;box-shadow:var(--shadow);
+  opacity:0;pointer-events:none;transition:all .25s ease;z-index:200;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ---------- Character sheet ---------- */
+.char-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
+.char-card{
+  background:var(--panel);border:1px solid var(--border-soft);border-radius:var(--radius-lg);
+  padding:18px;cursor:pointer;transition:border-color .15s;
+}
+.char-card:hover{border-color:var(--lament-dim);}
+.char-card h3{font-family:var(--font-display);margin:0 0 2px;font-size:17px;}
+.char-card .sub{font-size:12.5px;color:var(--text-dim);margin-bottom:10px;}
+.bar-row{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-dim);margin-bottom:5px;}
+.bar-row .label{width:52px;flex-shrink:0;font-weight:600;}
+.bar-track{flex:1;height:7px;border-radius:99px;background:var(--bg);overflow:hidden;border:1px solid var(--border-soft);}
+.bar-fill{height:100%;border-radius:99px;}
+.bar-fill.vida{background:linear-gradient(90deg,var(--fear-dim),var(--fear));}
+.bar-fill.recurso{background:linear-gradient(90deg,var(--brisa-dim),var(--brisa));}
+.bar-fill.lucidez{background:linear-gradient(90deg,var(--lament-dim),var(--lament));}
+.bar-val{width:56px;text-align:right;flex-shrink:0;font-family:var(--font-mono);}
+
+.sheet{
+  background:var(--panel);border:1px solid var(--border-soft);border-radius:var(--radius-lg);
+  padding:24px 26px;margin-bottom:20px;
+}
+.sheet-head{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:18px;}
+.sheet-head h2{font-family:var(--font-display);font-size:24px;margin:0;}
+.sheet-head .sub{color:var(--text-dim);font-size:13.5px;margin-top:4px;}
+.sheet-cols{display:grid;grid-template-columns:1.1fr 1fr;gap:20px;}
+@media(max-width:760px){.sheet-cols{grid-template-columns:1fr;}}
+.attr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:6px;}
+.attr-box{background:var(--bg-soft);border:1px solid var(--border-soft);border-radius:10px;padding:10px;text-align:center;}
+.attr-box .name{font-size:11px;color:var(--text-faint);letter-spacing:.02em;}
+.attr-box .val{font-family:var(--font-display);font-size:20px;margin-top:2px;}
+.attr-box .val.pos{color:var(--good);}
+.attr-box .val.neg{color:var(--fear);}
+.res-block{margin-top:14px;}
+.res-block h4{font-size:12px;text-transform:none;color:var(--text-faint);margin:0 0 6px;letter-spacing:.02em;font-weight:600;}
+.tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.tag-row .tagpill{font-size:11.5px;background:var(--bg-soft);border:1px solid var(--border-soft);padding:4px 9px;border-radius:99px;color:var(--text-dim);}
+.notes-box{white-space:pre-wrap;font-size:13px;color:var(--text-dim);background:var(--bg-soft);border:1px solid var(--border-soft);border-radius:10px;padding:12px;min-height:60px;}
+
+.footer-note{margin-top:40px;padding-top:16px;border-top:1px solid var(--border-soft);font-size:12px;color:var(--text-faint);text-align:center;}
+.check-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--panel-2)}.check-option{display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;cursor:pointer}.check-option:hover{background:var(--panel)}.check-option input{accent-color:var(--brisa)}</style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-title">Brisa e<br>Lamentações</div>
+      <div class="brand-sub">Livro do Jogador · Interativo</div>
+    </div>
+    <nav class="tabs" id="tabNav">
+      <button class="tab-btn active" data-tab="inicio"><span class="ico">◆</span> Início</button>
+      <button class="tab-btn" data-tab="mecanicas"><span class="ico">⚙</span> Mecânicas</button>
+      <button class="tab-btn" data-tab="racas"><span class="ico">⛰</span> Raças</button>
+      <button class="tab-btn" data-tab="classes"><span class="ico">⚔</span> Classes &amp; Caminhos</button>
+      <button class="tab-btn" data-tab="magias"><span class="ico">✦</span> Magias</button>
+      <button class="tab-btn" data-tab="tecnicas"><span class="ico">✺</span> Técnicas</button>
+      <button class="tab-btn" data-tab="equipamentos"><span class="ico">▣</span> Equipamentos</button>
+      <button class="tab-btn" data-tab="particularidades"><span class="ico">✦</span> Particularidades</button>
+      <button class="tab-btn" data-tab="reacoes"><span class="ico">↯</span> Reações</button>
+      <button class="tab-btn" data-tab="personagens"><span class="ico">☺</span> Personagens</button>
+    </nav>
+    <div class="sidebar-foot">
+      <button class="mini-btn" id="btnExport">⇩ Exportar dados (.json)</button>
+      <button class="mini-btn" id="btnImport">⇧ Importar dados (.json)</button>
+      <button class="mini-btn" id="btnReset">↺ Restaurar tudo ao original</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none">
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ================= INÍCIO ================= -->
+    <section class="section active" id="tab-inicio">
+      <div class="hero">
+        <h1>Brisa e Lamentações</h1>
+        <p>Um sistema de RPG que herda de D&amp;D a estrutura de Atributos, Classes, Raças e Níveis, e do Daggerheart o motor de resolução por Duality Dice (2d12, Hope e Fear), com os recursos próprios de Mana, Prana, Lucidez, Caminhos e Experiences.</p>
+        <div class="duality">
+          <div class="die hope">
+            <b>Hope</b>
+            <p>Quando o dado de Hope supera o de Fear num sucesso, o personagem gera Mana (classes mágicas, +3) ou Prana (classes físicas, +1) imediatamente.</p>
+          </div>
+          <div class="die fear">
+            <b>Fear</b>
+            <p>Quando o dado de Fear supera o de Hope num sucesso, o teste funciona mas o Mestre pode introduzir complicação, reação inimiga ou perda leve de Lucidez (1 a 3).</p>
+          </div>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat"><b id="statRacas">-</b><span>RAÇAS</span></div>
+          <div class="hero-stat"><b id="statClasses">-</b><span>CLASSES</span></div>
+          <div class="hero-stat"><b id="statMagias">-</b><span>MAGIAS</span></div>
+          <div class="hero-stat"><b id="statTecnicas">-</b><span>TÉCNICAS</span></div>
+          <div class="hero-stat"><b id="statItens">-</b><span>ITENS</span></div>
+          <div class="hero-stat"><b id="statPersonagens">-</b><span>PERSONAGENS</span></div>
+        </div>
+      </div>
+
+      <div class="ref-grid">
+        <div class="ref-card">
+          <h3>Como usar este livro</h3>
+          <p>Cada seção do menu lateral é um módulo independente: você pode <b style="color:var(--text)">adicionar</b>, <b style="color:var(--text)">editar</b> ou <b style="color:var(--text)">remover</b> raças, classes, magias, técnicas, itens e personagens livremente. Tudo é salvo automaticamente no seu navegador.</p>
+          <p>Use "Exportar dados" para guardar um backup, e "Restaurar tudo ao original" para voltar ao conteúdo base do livro a qualquer momento.</p>
+        </div>
+        <div class="ref-card">
+          <h3>Distribuição de Atributos (criação)</h3>
+          <table><tbody>
+            <tr><td class="k">1 Atributo</td><td>+2</td></tr>
+            <tr><td class="k">2 Atributos</td><td>+1</td></tr>
+            <tr><td class="k">2 Atributos</td><td>+0</td></tr>
+            <tr><td class="k">1 Atributo</td><td>-1</td></tr>
+          </tbody></table>
+          <p style="margin-top:8px;">Some sempre +3 no total. Depois some o Bônus Simples da Raça. Nenhum atributo passa de +3 (ou fica abaixo de -1) no nível 1.</p>
+        </div>
+        <div class="ref-card">
+          <h3>Recursos iniciais por tipo de Classe</h3>
+          <table><tbody>
+            <tr><td class="k">Vida (Física)</td><td>7</td></tr>
+            <tr><td class="k">Vida (Mágica)</td><td>6</td></tr>
+            <tr><td class="k">Lucidez (Física)</td><td>80</td></tr>
+            <tr><td class="k">Lucidez (Mágica)</td><td>100</td></tr>
+            <tr><td class="k">Evasão base</td><td>10 + Agilidade</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MECÂNICAS ================= -->
+    <section class="section" id="tab-mecanicas">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Mecânicas Básicas</div>
+          <div class="section-desc">Referência rápida das regras centrais: dados, dificuldades, condições, descanso, progressão e o sistema de Trauma e Lucidez.</div>
+        </div>
+      </div>
+      <div class="ref-grid" id="mecanicasGrid"></div>
+    </section>
+
+    <!-- ================= RAÇAS ================= -->
+    <section class="section" id="tab-racas">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Raças</div>
+          <div class="section-desc">A ancestralidade do personagem. Cada raça tem um Bônus Simples e de 2 a 3 Traços Marcantes.</div>
+        </div>
+        <div class="section-actions"><button class="btn btn-primary" onclick="openRaceForm()">+ Nova raça</button></div>
+      </div>
+      <div class="toolbar">
+        <div class="search-wrap"><input class="input" id="searchRacas" placeholder="Buscar raça..." oninput="renderRacas()"></div>
+      </div>
+      <div class="grid" id="gridRacas"></div>
+    </section>
+
+    <!-- ================= CLASSES ================= -->
+    <section class="section" id="tab-classes">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Classes &amp; Caminhos</div>
+          <div class="section-desc">A forma fundamental como o personagem enfrenta o mundo - recurso principal, características, Impulso e as duas árvores de Caminho.</div>
+        </div>
+        <div class="section-actions"><button class="btn btn-primary" onclick="openClassForm()">+ Nova classe</button></div>
+      </div>
+      <div class="toolbar">
+        <div class="search-wrap"><input class="input" id="searchClasses" placeholder="Buscar classe..." oninput="renderClasses()"></div>
+        <div class="chip-filter" id="filterClassType">
+          <div class="chip active" data-val="">Todas</div>
+          <div class="chip" data-val="Física">Físicas</div>
+          <div class="chip" data-val="Mágica">Mágicas</div>
+        </div>
+      </div>
+      <div class="grid" id="gridClasses"></div>
+    </section>
+
+    <!-- ================= MAGIAS ================= -->
+    <section class="section" id="tab-magias">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Lista de Magias</div>
+          <div class="section-desc">Lista base e modelo - não é exaustiva. Novas magias podem seguir a mesma estrutura de Círculo, Classe, custo de Mana e Atributo.</div>
+        </div>
+        <div class="section-actions"><button class="btn btn-primary" onclick="openSpellForm()">+ Nova magia</button></div>
+      </div>
+      <div class="toolbar">
+        <div class="search-wrap"><input class="input" id="searchMagias" placeholder="Buscar magia..." oninput="renderSpells()"></div>
+        <select class="input" id="filterMagiaClasse" onchange="renderSpells()"></select>
+      </div>
+      <div class="grid" id="gridMagias"></div>
+    </section>
+
+    <!-- ================= TÉCNICAS ================= -->
+    <section class="section" id="tab-tecnicas">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Lista de Técnicas</div>
+          <div class="section-desc">O equivalente físico das magias - habilidades marciais que consomem Prana, organizadas por Grau, Classe e Tipo.</div>
+        </div>
+        <div class="section-actions"><button class="btn btn-primary" onclick="openTechForm()">+ Nova técnica</button></div>
+      </div>
+      <div class="toolbar">
+        <div class="search-wrap"><input class="input" id="searchTecnicas" placeholder="Buscar técnica..." oninput="renderTechs()"></div>
+        <select class="input" id="filterTecClasse" onchange="renderTechs()"></select>
+      </div>
+      <div class="grid" id="gridTecnicas"></div>
+    </section>
+
+    <!-- ================= EQUIPAMENTOS ================= -->
+    <section class="section" id="tab-equipamentos">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Equipamentos</div>
+          <div class="section-desc">Armas, armaduras, ferramentas mágicas e consumíveis. Tier limita o que o personagem pode equipar (acompanha o nível).</div>
+        </div>
+        <div class="section-actions"><button class="btn btn-primary" onclick="openItemForm()">+ Novo item</button></div>
+      </div>
+      <div class="toolbar">
+        <div class="search-wrap"><input class="input" id="searchItens" placeholder="Buscar item..." oninput="renderItems()"></div>
+        <div class="chip-filter" id="filterItemCat">
+          <div class="chip active" data-val="">Todos</div>
+          <div class="chip" data-val="Arma">Armas</div>
+          <div class="chip" data-val="Armadura">Armaduras</div>
+          <div class="chip" data-val="Ferramenta Mágica">Ferramentas Mágicas</div>
+          <div class="chip" data-val="Consumível">Consumíveis</div>
+          <div class="chip" data-val="Item Mágico">Itens Mágicos</div>
+        </div>
+      </div>
+      <div class="grid" id="gridItens"></div>
+    </section>
+
+    <!-- ================= PARTICULARIDADES ================= -->
+    <section class="section" id="tab-particularidades">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Particularidades</div>
+          <div class="section-desc">Características, conhecimentos, hábitos, condições e especializações que podem alterar diretamente as regras do personagem.</div>
+        </div>
+        <div class="section-actions"><button class="btn btn-primary" onclick="openParticularidadeForm()">+ Nova particularidade</button></div>
+      </div>
+      <div class="toolbar"><div class="search-wrap"><input class="input" id="searchParticularidades" placeholder="Buscar particularidade..." oninput="renderParticularidades()"></div></div>
+      <div class="grid" id="gridParticularidades"></div>
+    </section>
+
+    <!-- ================= REAÇÕES ================= -->
+    <section class="section" id="tab-reacoes">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Reações</div>
+          <div class="section-desc">Respostas imediatas ao que acontece na ficção. Reações não dependem de turnos ou iniciativa: elas são ativadas por gatilhos dentro do Holofote.</div>
+        </div>
+      </div>
+      <div class="grid" id="gridReacoes"></div>
+    </section>
+
+    <!-- ================= PERSONAGENS ================= -->
+    <section class="section" id="tab-personagens">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Personagens</div>
+          <div class="section-desc">Crie e acompanhe as fichas do seu grupo - Vida, Mana/Prana e Lucidez calculados a partir de Raça e Classe.</div>
+        </div>
+        <div class="section-actions"><button class="btn btn-primary" onclick="openCharForm()">+ Novo personagem</button></div>
+      </div>
+      <div id="charListWrap">
+        <div class="char-grid" id="gridPersonagens"></div>
+      </div>
+      <div id="charSheetWrap"></div>
+    </section>
+
+  </main>
+</div>
+
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal" id="modalBox"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   DADOS BASE - extraídos do livro "Brisa e Lamentações"
+   ===================================================================== */
+const DEFAULT_DATA = {
+  races: [
+    {id:"r1",name:"Humanos",bonus:"+1 em um atributo à escolha",appearance:"1,60m–1,90m · vida útil até 100 anos",identity:"Não têm conexão profunda com o Astral; sua força está na adaptabilidade e na versatilidade.",traits:[
+      {name:"Determinação",desc:"Uma vez por sessão, perca 1 Lucidez para rolar novamente um dos Duality Dice."},
+      {name:"Aprendizado Versátil",desc:"Na criação, escolha uma Experience adicional além das concedidas pela Classe."},
+      {name:"Estabilidade Mundana",desc:"Na primeira Perda Catastrófica de Lucidez da sessão, pode perder 2 Lucidez adicionais para reduzir a gravidade do Trauma resultante em um nível."}
+    ]},
+    {id:"r2",name:"Elfos",bonus:"+1 Agilidade ou Precisão",appearance:"1,60m–1,75m · milênios de vida",identity:"Conexão intensa com magia e cosmos; graciosos, longevos e alheios às preocupações mundanas.",traits:[
+      {name:"Visão Élfica",desc:"Enxergam normalmente em ambientes com pouca luz, tratando escuridão parcial como iluminação plena."},
+      {name:"Transe Astral",desc:"Não dormem: entram em meditação profunda por algumas horas, cumprindo a função de um descanso longo."},
+      {name:"Eco Astral",desc:"Uma vez por descanso longo, podem negar uma perda de Lucidez causada por Outrem, perdendo 1 Lucidez no lugar."}
+    ]},
+    {id:"r3",name:"Anões",bonus:"+1 Força",appearance:"1,20m–1,40m · até ~500 anos (maldição)",identity:"Dominam as montanhas; força física e domínio sobre metais compensam a baixa estatura.",traits:[
+      {name:"Visão no Escuro",desc:"Enxergam normalmente em pouca ou nenhuma luz."},
+      {name:"Sangue de Pedra",desc:"Resistência natural a venenos e toxinas: um nível a menos de severidade."},
+      {name:"Mente de Pedra",desc:"Uma vez por descanso curto, podem negar perda de Lucidez causada por Acontecimentos ou Outrem (não Substâncias), perdendo 1 Lucidez no lugar."}
+    ]},
+    {id:"r4",name:"Gnomos",bonus:"+1 Inteligência",appearance:"1,0m–1,20m · 6 a 7 séculos",identity:"Lideram o desenvolvimento tecnológico, unindo domínio da natureza a criatividade mecânica.",traits:[
+      {name:"Visão no Escuro",desc:"Enxergam normalmente em pouca ou nenhuma luz."},
+      {name:"Esperteza Gnômica",desc:"Vantagem em testes de resistência contra efeitos mágicos de controle ou leitura mental."},
+      {name:"Engenhoca de Bolso",desc:"Uma vez por descanso curto, perca 1 Lucidez para que uma invenção pessoal resolva um pequeno problema prático."}
+    ]},
+    {id:"r5",name:"Orcs",bonus:"+1 Força",appearance:"2,0m–3,0m · 1 a 3 séculos",identity:"Vivem no âmbito da guerra; força lendária e resistência à dor quase sobrenatural.",traits:[
+      {name:"Visão no Escuro",desc:"Enxergam normalmente em pouca ou nenhuma luz."},
+      {name:"Vigor Inabalável",desc:"Uma vez por descanso longo, ao chegar a 0 de Vida por um golpe não letal imediato, permanece de pé com 1 Vida."},
+      {name:"Endurecido pela Guerra",desc:"Uma vez por cena de combate, pode negar perda de Lucidez causada por Acontecimento ocorrido no próprio combate, perdendo 1 Lucidez no lugar."}
+    ]},
+    {id:"r6",name:"Draconianos",bonus:"+1 Presença",appearance:"1,50m–1,90m · 1 a 3 séculos",identity:"Descendentes distantes dos dragões; escamas, presença imponente e sopro elemental latente.",traits:[
+      {name:"Ancestral Dracônico",desc:"Escolha um elemento (fogo, gelo, raio, ácido ou veneno) na criação: resistência a esse tipo de dano."},
+      {name:"Sopro Elemental",desc:"Uma vez por descanso longo, expele uma rajada do elemento escolhido, dano equivalente ao de uma arma do seu Tier."},
+      {name:"Hipersensibilidade Sensorial",desc:"Não pode ser pego de surpresa por ataques de curto alcance, exceto fontes sobrenaturais ou muito furtivas."}
+    ]},
+    {id:"r7",name:"Tieflings",bonus:"+1 Presença",appearance:"1,50m–1,90m · até 7 séculos",identity:"Carregam legado de linhagem infernal distante; mente afiada e presença magnética.",traits:[
+      {name:"Visão no Escuro e Resistência Infernal",desc:"Enxergam no escuro e possuem resistência a dano de fogo."},
+      {name:"Legado Inféro",desc:"Escolha uma linhagem infernal (Abissal, Ctônica, Infernal): um truque menor sempre disponível, sem custo de Mana."},
+      {name:"Marcados",desc:"Uma vez por descanso longo, podem negar perda de Lucidez causada por rejeição/humilhação social/desprezo alheio, perdendo 1 Lucidez no lugar."}
+    ]},
+    {id:"r8",name:"Katari",bonus:"+1 Agilidade ou Precisão",appearance:"1,30m–1,70m · até 80 anos",identity:"Humanoides felinos entre a civilização e a natureza indomada; curiosos por natureza.",traits:[
+      {name:"Garras Naturais",desc:"Garras retráteis funcionam como arma natural leve cortante, sempre 'equipada'."},
+      {name:"Velocidade Felina",desc:"Uma vez por descanso curto, dobra a velocidade de movimento por um turno, ignorando terreno difícil."},
+      {name:"Curiosidade Voraz",desc:"Vantagem para obter informações sobre objetos, relíquias, livros ou boatos (mas mais vulneráveis a se arriscar por vontade própria)."}
+    ]},
+    {id:"r9",name:"Wishborn",bonus:"+1 Instinto",appearance:"variável · vida útil desconhecida",identity:"Nascidos de um desejo concedido por um Djinn; cada um é único, herdando traços de quem pediu e do Djinn.",traits:[
+      {name:"Eco do Desejo",desc:"Escolha uma raça existente na criação; ganha um dos Traços Marcantes dela, sujeito à aprovação do Mestre."},
+      {name:"Sombra do Djinn",desc:"Presença sutilmente sobrenatural: animais reagem de forma incomum, certos rituais os detectam como 'não totalmente mortais'."},
+      {name:"Existência Instável",desc:"Perdas de Lucidez causadas por Outrem são sempre tratadas um grau de severidade acima do normal."}
+    ]},
+    {id:"r10",name:"Clank",bonus:"+1 à escolha (definido na criação)",appearance:"variável · vida útil indefinida (depende de manutenção)",identity:"Seres construídos de metal e núcleos mágicos, animados por um propósito.",traits:[
+      {name:"Design Propositado",desc:"Na criação, escolha um segundo atributo para receber +1."},
+      {name:"Reparo Eficiente",desc:"Durante um descanso, recupera uma quantidade adicional de Vida além do normal."},
+      {name:"Imunidade Biológica",desc:"Imune a venenos, doenças e efeitos que dependam de biologia viva."}
+    ]},
+    {id:"r11",name:"Faerie",bonus:"+1 Agilidade ou Precisão",appearance:"0,60m–0,90m · séculos de vida",identity:"Pequenos seres feéricos com asas delicadas e conexão profunda com sorte e acaso.",traits:[
+      {name:"Voo Curto",desc:"Voa curtas distâncias - atravessa obstáculos pequenos, plana uma queda ou alcança lugares elevados."},
+      {name:"Sortudo",desc:"Uma vez por sessão, força a repetição de um dos Duality Dice numa rolagem própria."},
+      {name:"Fragilidade Feérica",desc:"Ataques físicos severos contra um Faerie são tratados um grau de severidade acima do normal."}
+    ]},
+    {id:"r12",name:"Fauno",bonus:"+1 Agilidade ou Precisão",appearance:"1,50m–1,80m · até 100 anos",identity:"Pernas caprinas e conexão instintiva com a natureza selvagem; ágeis e teimosos.",traits:[
+      {name:"Salto Caprino",desc:"Salta distâncias e alturas maiores que a média, sem necessidade de teste em situações razoáveis."},
+      {name:"Chifres",desc:"Ataque natural de investida com os chifres, útil ao correr antes do golpe."},
+      {name:"Espírito Indomável",desc:"Vantagem em testes de resistência contra controle, comando ou dominação da vontade."}
+    ]},
+    {id:"r13",name:"Firbolg",bonus:"+1 Presença",appearance:"2,10m–2,50m · séculos de vida",identity:"Gigantes gentis, profundamente conectados à empatia; preferem diplomacia à violência.",traits:[
+      {name:"Investida",desc:"Ao se mover em linha reta antes de atacar, o golpe seguinte causa dano adicional."},
+      {name:"Inabalável",desc:"Uma vez por descanso curto, ao sofrer dano físico que marcaria Vida, reduz a marcação em 1 ponto, perdendo 1 Lucidez no lugar."},
+      {name:"Empatia Silenciosa",desc:"Percebe com clareza o estado emocional genuíno de quem está por perto, mesmo escondido."}
+    ]},
+    {id:"r14",name:"Fungril",bonus:"+1 Inteligência",appearance:"1,20m–1,60m · vida útil indefinida (rede continua)",identity:"Seres fúngicos que compartilham uma rede de consciência subterrânea.",traits:[
+      {name:"Rede Fúngica",desc:"Comunica-se de forma limitada com outros Fungril via esporos, mesmo sem contato visual."},
+      {name:"Conexão com a Morte",desc:"Extrai impressões residuais de corpos recém-falecidos via esporos, obtendo fragmentos de informação."},
+      {name:"Corpo Modular",desc:"Parte do corpo pode regenerar de ferimentos permanentes em outras raças, a critério do Mestre."}
+    ]},
+    {id:"r15",name:"Galapa",bonus:"+1 Instinto",appearance:"1,40m–1,70m · séculos de vida",identity:"Humanoides com carapaças protetoras; lentos, mas quase impossíveis de derrubar.",traits:[
+      {name:"Concha",desc:"Armor Score adicional natural, mesmo sem armadura equipada."},
+      {name:"Recolher-se",desc:"Como Reação, recolhe-se na carapaça: proteção substancial contra um ataque, mas perde a ação no próprio próximo turno."},
+      {name:"Passo Firme",desc:"Dificilmente é derrubado ou deslocado à força contra sua vontade."}
+    ]},
+    {id:"r16",name:"Gigante",bonus:"+1 Força",appearance:"2,50m–3,50m · até 200 anos",identity:"A maior das raças mortais; força capaz de moldar o próprio terreno.",traits:[
+      {name:"Resistência",desc:"Vida adicional em relação às outras raças."},
+      {name:"Alcance",desc:"Alcance adicional em ataques corpo a corpo e para alcançar objetos distantes."},
+      {name:"Passos Pesados",desc:"Inimigos próximos sofrem desvantagem para se esgueirar despercebidos por um Gigante."}
+    ]},
+    {id:"r17",name:"Goblin",bonus:"+1 Instinto",appearance:"1,00m–1,30m · até 60 anos",identity:"Pequenos, espertos e rápidos; sobrevivem pela astúcia e trabalho em equipe.",traits:[
+      {name:"Passo Seguro",desc:"Ignora terrenos instáveis/escorregadios sem penalidade; sem desvantagem em espaços apertados."},
+      {name:"Sentido de Perigo",desc:"Uma vez por cena, age com vantagem ao tentar evitar ser surpreendido."},
+      {name:"Sortudo em Grupo",desc:"Lutando ao lado de ao menos um aliado, recebe pequenas vantagens situacionais adicionais."}
+    ]},
+    {id:"r18",name:"Halfling",bonus:"+1 Agilidade ou Precisão",appearance:"0,90m–1,20m · até 150 anos",identity:"Pequenos, discretos e surpreendentemente resilientes diante do perigo.",traits:[
+      {name:"Sorte",desc:"Uma vez por sessão, transforma um resultado de Fear prevalecente em Hope prevalecente numa rolagem própria."},
+      {name:"Bússola Interior",desc:"Nunca fica genuinamente perdido: sempre tem noção aproximada de direção e posição."},
+      {name:"Discrição Natural",desc:"Mais fácil passar despercebido em ambientes movimentados ou multidões."}
+    ]},
+    {id:"r19",name:"Ribbet",bonus:"+1 Instinto",appearance:"1,20m–1,60m · até 80 anos",identity:"Humanoides anfíbios, à vontade tanto na terra quanto na água.",traits:[
+      {name:"Anfíbio",desc:"Respira no ar e debaixo d'água, nada com a mesma facilidade com que caminha."},
+      {name:"Língua Longa",desc:"Usa a própria língua para puxar pequenos objetos ou se agarrar a superfícies próximas à distância."},
+      {name:"Salto Potente",desc:"Salta distâncias notavelmente maiores que a média, especialmente na horizontal."}
+    ]},
+    {id:"r20",name:"Simiah",bonus:"+1 Agilidade ou Precisão",appearance:"1,50m–1,80m · até 80 anos",identity:"Humanoides primatas, ágeis, sociáveis e extremamente adaptáveis.",traits:[
+      {name:"Escalador Nato",desc:"Escala superfícies com a mesma facilidade de caminhar em terreno plano, sem teste em situações razoáveis."},
+      {name:"Equilíbrio Natural",desc:"Dificilmente perde o equilíbrio em superfícies instáveis, estreitas ou em movimento."},
+      {name:"Cauda Preênsil (opcional)",desc:"A critério do Mestre, alguns Simiah têm cauda preênsil capaz de segurar objetos leves ou ajudar em escaladas."}
+    ]}
+  ],
+
+  classes: [
+    {id:"c1",name:"Mago",type:"Mágica",resource:"Mana",resourceMax:115,lucidityMax:100,attrs:"Inteligência e Instinto",
+     identity:"O estudioso da magia. Enquanto o Feiticeiro sente a Mana, o Mago entende sua estrutura - círculos mágicos, encantamentos, ferramentas e conhecimento teórico.",
+     features:[{name:"Padrões Arcanos",desc:"Identifica padrões na realidade; certos resultados dos Duality Dice concedem benefícios."},{name:"Preparação",desc:"Prepara um conjunto de magias e técnicas para a aventura, ajustável em períodos apropriados."}],
+     impulse:{name:"Domínio Arcano",desc:"Gasta Mana para modificar uma magia preparada, ampliar seu efeito ou realizar uma conjuração extraordinária."},
+     paths:[{name:"Conhecimento",focus:"Estudo, preparação e domínio teórico",areas:"Círculos, Grimórios, Identificação, Preparação, Memória Perfeita"},
+            {name:"Guerra Arcana",focus:"Aplicação prática da magia em combate",areas:"Escudos, Evocação, Ataques, Conjuração Rápida, Destruição Arcana"}]},
+    {id:"c2",name:"Feiticeiro",type:"Mágica",resource:"Mana",resourceMax:110,lucidityMax:100,attrs:"Presença e Instinto",
+     identity:"Poder que é uma característica da própria existência - uma conexão espontânea e profunda com a Mana, sem aprendizado formal como o Mago.",
+     features:[{name:"Magia Instintiva",desc:"Modifica ou adapta magias através da própria Mana: alcance, dano, velocidade, área ou combinação de efeitos, com custo."}],
+     impulse:{name:"Sobrecarga",desc:"Ultrapassa deliberadamente os limites da própria Mana; a magia é amplificada, mas pode consumir Mana adicional ou Lucidez."},
+     paths:[{name:"Linhagem",focus:"O poder vem de uma origem específica",areas:"Dracônica, Celestial, Abissal, Elemental, Astral"},
+            {name:"Tempestade",focus:"Transforma a própria Mana em energia destrutiva e instável",areas:"Elementos, Descargas, Explosões, Sobrecarga, Cataclismo"}]},
+    {id:"c3",name:"Serafim",type:"Mágica",resource:"Mana",resourceMax:100,lucidityMax:100,attrs:"Presença, Força e Instinto",
+     identity:"Combatente espiritual que canaliza uma força superior através da própria alma - fé, propósito ou vínculo espiritual.",
+     features:[{name:"Dados de Oração",desc:"Alteram resultados, protegem aliados, reduzem dano ou aumentam efeitos de cura."}],
+     impulse:{name:"Suporte Vital",desc:"Canaliza Mana para impedir que um aliado caia, recuperando recursos ou impedindo temporariamente uma consequência grave."},
+     paths:[{name:"Devoção",focus:"Fé, proteção e suporte",areas:"Orações, Cura, Proteção, Bênçãos, Milagre"},
+            {name:"Guerreiro Celestial",focus:"Combate e poder espiritual",areas:"Arma Sagrada, Golpes Radiantes, Armadura Espiritual, Julgamento, Avatar Celestial"}]},
+    {id:"c4",name:"Druida",type:"Mágica",resource:"Mana",resourceMax:90,lucidityMax:100,attrs:"Instinto, Presença e Força",
+     identity:"Conexão profunda com a natureza e as formas vivas do mundo; capacidade de alterar o próprio corpo e utilizar forças naturais.",
+     features:[{name:"Forma Selvagem",desc:"Transforma o corpo em diferentes formas naturais, cada uma com Vida, capacidades, ataques e movimentação próprios."},{name:"Toque Natural",desc:"Sente alterações ambientais, manipula plantas, identifica criaturas."}],
+     impulse:{name:"Evolução",desc:"Força a transformação além do limite normal, gastando Mana para melhorar temporariamente a forma selvagem atual."},
+     paths:[{name:"Forma Primordial",focus:"Transformação e combate",areas:"Predadores, Grandes Feras, Criaturas Aquáticas, Criaturas Aéreas, Forma Primordial"},
+            {name:"Guardião Natural",focus:"Magia natural e suporte",areas:"Plantas, Cura, Espíritos, Elementos, Avatar da Natureza"}]},
+    {id:"c5",name:"Bardo",type:"Mágica",resource:"Mana",resourceMax:85,lucidityMax:100,attrs:"Presença, Agilidade/Precisão ou Inteligência",
+     identity:"Transforma expressão, presença e emoção em poder - a força está na capacidade de alterar o estado das pessoas ao redor.",
+     features:[{name:"Inspiração",desc:"Concede Dados de Inspiração a aliados, usáveis em rolagens, reações, dano ou para recuperar Lucidez."}],
+     impulse:{name:"Fazer uma Cena",desc:"Gasta muita Mana para alterar imediatamente o ritmo da cena - distrair, fortalecer, ou transformar uma falha social em oportunidade."},
+     paths:[{name:"Trovador",focus:"Música e fortalecimento do grupo",areas:"Canções de Recuperação, Canções de Guerra, Canções de Inspiração, Melodias Emocionais, Harmonia Suprema"},
+            {name:"Orador",focus:"Palavras, influência e manipulação",areas:"Discursos, Persuasão, Intimidação, Encantamento, Manipulação Mental"}]},
+    {id:"c6",name:"Monge",type:"Física",resource:"Prana",resourceMax:35,lucidityMax:80,attrs:"Agilidade/Precisão, Presença e Instinto",
+     identity:"A classe física mais espiritual: canaliza o Prana pela disciplina interior e o equilíbrio entre corpo e espírito.",
+     features:[{name:"Fluxo Interior",desc:"Acumula e circula Prana internamente, encadeando golpes desarmados; cada golpe conectado potencializa o próximo."},{name:"Equilíbrio Interior",desc:"Recuperação de Lucidez mais eficiente durante descanso; pode meditar uma vez por sessão para recuperar Lucidez extra."}],
+     impulse:{name:"Vazio Interior",desc:"Concentra todo o Prana em um golpe de precisão absoluta, ignorando parte da proteção do alvo."},
+     paths:[{name:"Punho de Ferro",focus:"Combate desarmado ofensivo",areas:"Golpes Sequenciais, Pontos Vitais, Quebra de Guarda, Fúria Contida, Punho Transcendente"},
+            {name:"Vazio",focus:"Disciplina interior, meditação e defesa espiritual",areas:"Meditação, Desvio, Serenidade, Corpo Diáfano, Iluminação"}]},
+    {id:"c7",name:"Samurai",type:"Física",resource:"Prana",resourceMax:30,lucidityMax:80,attrs:"Agilidade/Precisão, Instinto e Presença",
+     identity:"Classe exclusiva do sistema: disciplina marcial, precisão, controle emocional e domínio da lâmina. Não pertence aos Caminhos do Guerreiro.",
+     features:[{name:"Posturas",desc:"Água (defesa/reação), Fogo (ofensiva/pressão), Vento (mobilidade/velocidade) e Montanha (resistência/estabilidade)."},{name:"Disciplina",desc:"Habilidades que permitem resistir a efeitos mentais, negar perdas, recuperar Prana ou transformar Lucidez em potência temporária."}],
+     impulse:{name:"Corte Absoluto",desc:"Concentra o Prana em um único momento; o ataque recebe efeitos especiais determinados pela Postura ativa."},
+     paths:[{name:"Iaijutsu",focus:"Saque, precisão e primeiro golpe",areas:"Saque Rápido, Corte Inicial, Iaijutsu, Contra-Corte, Corte do Horizonte"},
+            {name:"Bushido",focus:"Disciplina, resistência e domínio mental",areas:"Código, Disciplina, Espírito Inabalável, Sacrifício, Lâmina Absoluta"}]},
+    {id:"c8",name:"Guardião",type:"Física",resource:"Prana",resourceMax:25,lucidityMax:80,attrs:"Instinto, Força e Presença",
+     identity:"A linha entre os aliados e o perigo. Sua função não é apenas sobreviver - é impedir que os outros sejam destruídos.",
+     features:[{name:"Proteção",desc:"Usa Reações para proteger aliados: receber parte do dano, reduzi-lo, alterar o alvo de um ataque ou impedir deslocamentos."}],
+     impulse:{name:"Eu Estou Aqui",desc:"Concentra Prana para assumir a atenção do campo de batalha; inimigos são atraídos para si enquanto aliados recebem proteção."},
+     paths:[{name:"Muralha",focus:"Defesa absoluta",areas:"Armadura, Bloqueio, Resistência, Defesa de Área, Fortaleza Viva"},
+            {name:"Campeão",focus:"Proteger através da ofensiva",areas:"Contra-ataques, Interceptação, Desafios, Vingança, Campeão Imortal"}]},
+    {id:"c9",name:"Patrulheiro",type:"Física",resource:"Prana",resourceMax:25,lucidityMax:80,attrs:"Agilidade/Precisão, Instinto e Inteligência",
+     identity:"O especialista em caça, rastreamento, sobrevivência e combate à distância.",
+     features:[{name:"Foco",desc:"Escolhe um alvo e concentra a atenção nele, recebendo benefícios crescentes - dano, rastreio, ignorar cobertura, revelar fraquezas."}],
+     impulse:{name:"Caçada Perfeita",desc:"Transforma o Foco em uma caçada implacável, gastando Prana para benefícios significativos contra o alvo por período limitado."},
+     paths:[{name:"Caçador",focus:"Eliminar alvos",areas:"Marca, Precisão, Armadilhas, Tiro Mortal, Predador Supremo"},
+            {name:"Companheiro",focus:"Trabalhar com uma criatura companheira",areas:"Companheiro, Comandos, Ataques Combinados, Sentidos Compartilhados, Caçada em Dupla"}]},
+    {id:"c10",name:"Bárbaro",type:"Física",resource:"Prana",resourceMax:20,lucidityMax:80,attrs:"Força, Presença e Instinto",
+     identity:"Canaliza o Prana através da fúria, não da disciplina - a entrega total ao instinto e à emoção crua.",
+     features:[{name:"Fúria Primordial",desc:"Entra em estado de Fúria gastando Prana: bônus de dano e resistência, mas perda de precisão/sutileza; pode escalar em combate prolongado."},{name:"Fúria Insensível",desc:"Em Fúria, pode negar uma perda de Lucidez de Acontecimento em combate gastando 1 Prana - o efeito é adiado, não removido."}],
+     impulse:{name:"Fúria Descontrolada",desc:"Abandona qualquer contenção gastando muito Prana: poder excepcional por período limitado, mas perde parte do controle sobre as próprias ações."},
+     paths:[{name:"Fúria",focus:"Dano bruto e resistência através da raiva",areas:"Fúria Crescente, Regeneração, Golpes Selvagens, Intimidação Primal, Avatar da Fúria"},
+            {name:"Instinto Selvagem",focus:"Instinto, percepção e ataques reflexivos",areas:"Reflexos Animais, Percepção Primitiva, Contra-Investidas, Fúria Silenciosa, Espírito da Fera"}]},
+    {id:"c11",name:"Ladino",type:"Física",resource:"Prana",resourceMax:20,lucidityMax:80,attrs:"Agilidade/Precisão, Presença e Instinto",
+     identity:"Vence através de velocidade, precisão, oportunidade e astúcia - assassino, espião, explorador, acrobata, ladrão ou infiltrador.",
+     features:[{name:"Oportunidade",desc:"Recebe benefícios ao atacar em situações favoráveis: distração, furtividade, posicionamento, surpresa ou terreno."}],
+     impulse:{name:"Golpe Impossível",desc:"Usa Prana, velocidade e precisão para uma ação normalmente muito difícil; o efeito depende da situação."},
+     paths:[{name:"Assassino",focus:"Eliminar alvos rapidamente",areas:"Veneno, Emboscada, Golpe Crítico, Execução, Morte Silenciosa"},
+            {name:"Trapaceiro",focus:"Manipulação e imprevisibilidade",areas:"Ilusões, Enganação, Mobilidade, Truques, Caos Controlado"}]},
+    {id:"c12",name:"Guerreiro",type:"Física",resource:"Prana",resourceMax:15,lucidityMax:80,attrs:"Força, Presença ou Agilidade/Precisão",
+     identity:"O maior especialista em combate marcial geral - não precisa de uma forma específica de combate para ser eficaz.",
+     features:[{name:"Maestria Marcial",desc:"Técnica de combate adaptável ao estilo do jogador: Arma Pesada, Duas Armas, Escudo, Arma de Haste ou Combate à Distância."}],
+     impulse:{name:"Surto de Combate",desc:"Usa Prana para ultrapassar temporariamente seus limites, realizando uma ação adicional ou potencializando uma ação existente."},
+     paths:[{name:"Mestre de Armas",focus:"Dominar diferentes armas e estilos",areas:"Armas pesadas, duas armas, combate à distância"},
+            {name:"Guardião Marcial",focus:"Defesa, controle e proteção",areas:"Escudo, resistência, reações defensivas"}]}
+  ],
+
+  spells: [
+    {id:"s1",name:"Nota Encorajadora",class:"Bardo",circle:1,levelMin:1,mana:10,attr:"Presença",range:"Perto",damage:"",effect:"Entoa uma frase curta e poderosa a um aliado: ele recebe vantagem no próximo teste ou recupera 1 ponto de Lucidez."},
+    {id:"s2",name:"Sussurro Perturbador",class:"Bardo",circle:1,levelMin:1,mana:10,attr:"Presença",range:"Perto",damage:"",effect:"Planta uma dúvida ou distração na mente de um alvo: o próximo teste dele é feito com desvantagem, a menos que resista."},
+    {id:"s3",name:"Sinfonia do Campo de Batalha",class:"Bardo",circle:2,levelMin:2,mana:20,attr:"Presença",range:"Longe",damage:"",effect:"Performance que atinge uma área curta: aliados recebem vantagem no próximo teste, inimigos recebem desvantagem."},
+    {id:"s4",name:"Toque Curativo",class:"Druida",circle:1,levelMin:1,mana:10,attr:"Instinto",range:"Melee",damage:"",effect:"Ao tocar um aliado, remove uma marca de dano Menor ou reduz em um nível a severidade de um dano recente não resolvido."},
+    {id:"s5",name:"Garras da Fera",class:"Druida",circle:1,levelMin:1,mana:10,attr:"Instinto",range:"Melee",damage:"d6 PHY",effect:"As mãos assumem forma de garras afiadas, permitindo ataque corpo a corpo natural até o fim da cena."},
+    {id:"s6",name:"Chamado da Tempestade",class:"Druida",circle:2,levelMin:2,mana:20,attr:"Instinto",range:"Longe",damage:"d8 MAG",effect:"Invoca rajada de vento e raios sobre área curta, causando dano a todos os alvos ali presentes."},
+    {id:"s7",name:"Luz Purificadora",class:"Serafim",circle:1,levelMin:1,mana:10,attr:"Presença",range:"Perto",damage:"",effect:"Luz suave sobre um aliado: remove marca de dano Menor ou reduz em um nível efeito de corrupção leve."},
+    {id:"s8",name:"Julgamento Radiante",class:"Serafim",circle:1,levelMin:1,mana:10,attr:"Presença",range:"Perto",damage:"d6 MAG",effect:"Concentra energia espiritual num golpe de luz; contra criaturas corrompidas/aberrantes, o dado de dano aumenta em um grau."},
+    {id:"s9",name:"Escudo dos Devotos",class:"Serafim",circle:2,levelMin:2,mana:20,attr:"Presença",range:"Perto",damage:"",effect:"Barreira espiritual ao redor de si e aliados próximos: cada um reduz a severidade do próximo dano em um nível, uma vez cada."},
+    {id:"s10",name:"Descarga Arcana",class:"Feiticeiro",circle:1,levelMin:1,mana:10,attr:"Presença",range:"Longe",damage:"d6 MAG",effect:"Explosão instintiva de energia bruta contra um alvo; não exige preparação ou círculo mágico."},
+    {id:"s11",name:"Fluxo Instável",class:"Feiticeiro",circle:1,levelMin:1,mana:10,attr:"Presença",range:"Perto",damage:"",effect:"Distorce a mana ao redor de forma imprevisível (luz, ruído, vento, temperatura); uma vez por cena, cria vantagem tática improvisada."},
+    {id:"s12",name:"Sobrecarga Elemental",class:"Feiticeiro",circle:2,levelMin:2,mana:20,attr:"Presença",range:"Longe",damage:"d8 MAG",effect:"Ultrapassa o fluxo natural da Mana para amplificar a explosão: cada +10 Mana investida aumenta o dado de dano em um grau. Ligada ao Impulso Sobrecarga."},
+    {id:"s13",name:"Mísseis Arcanos",class:"Mago",circle:1,levelMin:1,mana:10,attr:"Inteligência",range:"Longe",damage:"d6 MAG",effect:"Círculo mágico compacto dispara projéteis certeiros contra um alvo; dificilmente erra mesmo em más condições de visibilidade."},
+    {id:"s14",name:"Barreira Prismática",class:"Mago",circle:1,levelMin:1,mana:10,attr:"Inteligência",range:"Perto",damage:"",effect:"Círculo mágico defensivo à frente; enquanto ativo, reduz a severidade do próximo dano recebido em um nível."},
+    {id:"s15",name:"Círculo de Teleporte Menor",class:"Mago",circle:2,levelMin:2,mana:20,attr:"Inteligência",range:"Perto",damage:"",effect:"Círculo temporário que se conecta a um ponto visível dentro do alcance, permitindo deslocamento instantâneo. Exige linha de visão clara."}
+  ],
+
+  techniques: [
+    {id:"t1",name:"Golpe Fendente",class:"Guerreiro",grade:1,levelMin:1,prana:5,attr:"Força",type:"Impacto",effect:"Concentra toda a força em um golpe: +d6 de dano adicional.",tool:"Arma de Duas Mãos: gaste 1 Prana adicional para aumentar o dado bônus em um grau."},
+    {id:"t2",name:"Investida Dupla",class:"Guerreiro",grade:1,levelMin:1,prana:5,attr:"Agilidade/Precisão",type:"Sequência",effect:"Dois ataques rápidos encadeados contra o mesmo alvo ou próximos; o segundo causa metade do dano do primeiro.",tool:"Duas Armas: gaste 1 Prana adicional para um terceiro golpe."},
+    {id:"t3",name:"Postura de Combate",class:"Guerreiro",grade:2,levelMin:2,prana:8,attr:"Presença",type:"Defesa",effect:"Postura equilibrada entre ataque e defesa; até o próximo turno, reduz a severidade de um dano em um nível.",tool:"Escudo: gaste 1 Prana adicional para proteger também um aliado próximo."},
+    {id:"t4",name:"Bloqueio Absoluto",class:"Guardião",grade:1,levelMin:1,prana:5,attr:"Força",type:"Defesa",effect:"Posiciona-se entre um aliado e o perigo: o próximo ataque contra esse aliado é redirecionado para você.",tool:"Escudo: gaste 1 Prana adicional para reduzir a severidade do dano redirecionado em um nível."},
+    {id:"t5",name:"Provocação",class:"Guardião",grade:1,levelMin:1,prana:5,attr:"Presença",type:"Utilidade",effect:"Chama a atenção de inimigos próximos, forçando-os a ter uma razão forte para atacá-lo antes de outro alvo.",tool:""},
+    {id:"t6",name:"Muralha Viva",class:"Guardião",grade:2,levelMin:2,prana:8,attr:"Instinto",type:"Resistência",effect:"Firma-se no lugar, extremamente difícil de mover ou derrubar; reduz a severidade do próximo dano em um nível.",tool:"Armadura Pesada/Muito Pesada: gaste 1 Prana adicional para reduzir em dois níveis."},
+    {id:"t7",name:"Tiro Certeiro",class:"Patrulheiro",grade:1,levelMin:1,prana:5,attr:"Agilidade/Precisão",type:"Precisão",effect:"Mira cuidadosamente antes de disparar: +d6 de dano adicional, ignora parte da Evasão por cobertura.",tool:"Arma à Distância: gaste 1 Prana adicional para ignorar cobertura completa."},
+    {id:"t8",name:"Marca de Caça",class:"Patrulheiro",grade:1,levelMin:1,prana:5,attr:"Instinto",type:"Utilidade",effect:"Marca um alvo como sua Caça; enquanto o Foco estiver ativo, ataques contra ele recebem benefícios crescentes.",tool:""},
+    {id:"t9",name:"Tiro Duplo",class:"Patrulheiro",grade:2,levelMin:2,prana:8,attr:"Agilidade/Precisão",type:"Precisão",effect:"Dispara dois projéteis quase simultâneos contra o mesmo alvo ou alvos próximos no alcance.",tool:"Arma à Distância: gaste 1 Prana adicional para que o segundo projétil atinja um alvo diferente."},
+    {id:"t10",name:"Golpe Furtivo",class:"Ladino",grade:1,levelMin:1,prana:5,attr:"Agilidade/Precisão",type:"Sequência",effect:"Ao atacar um alvo distraído/desprotegido/em desvantagem: +d6 de dano adicional.",tool:"Duas Armas: gaste 1 Prana adicional para repetir o bônus num segundo ataque da sequência."},
+    {id:"t11",name:"Passo nas Sombras",class:"Ladino",grade:1,levelMin:1,prana:5,attr:"Agilidade/Precisão",type:"Mobilidade",effect:"Move-se rapidamente por um espaço curto, ignorando ataques de oportunidade durante o deslocamento.",tool:"Armadura Leve: gaste 1 Prana adicional para ignorar também terreno difícil."},
+    {id:"t12",name:"Fenda Precisa",class:"Ladino",grade:2,levelMin:2,prana:8,attr:"Agilidade/Precisão",type:"Impacto",effect:"Mira um ponto vulnerável: +d8 de dano adicional; em Sucesso com Esperança, o dano sobe um grau de severidade.",tool:""},
+    {id:"t13",name:"Golpe Selvagem",class:"Bárbaro",grade:1,levelMin:1,prana:5,attr:"Força",type:"Impacto",effect:"Ataca com força bruta descontrolada: +d6 de dano adicional, mas o próximo teste de precisão/sutileza tem desvantagem.",tool:"Arma de Duas Mãos: gaste 1 Prana adicional para aumentar o dado bônus em um grau."},
+    {id:"t14",name:"Grito de Guerra",class:"Bárbaro",grade:1,levelMin:1,prana:5,attr:"Presença",type:"Utilidade",effect:"Grito capaz de gelar o sangue: inimigos próximos sofrem desvantagem no próximo teste de resistência mental.",tool:""},
+    {id:"t15",name:"Fúria Ascendente",class:"Bárbaro",grade:2,levelMin:2,prana:8,attr:"Força",type:"Resistência",effect:"A Fúria se intensifica a cada golpe recebido: cada dano sofrido após usar concede bônus crescente de dano no próximo ataque, até o fim do combate.",tool:""},
+    {id:"t16",name:"Corte Relâmpago",class:"Samurai",grade:1,levelMin:1,prana:5,attr:"Agilidade/Precisão",type:"Impacto",effect:"Corte executado com velocidade extrema logo ao sacar a lâmina: +d6 de dano; só pode ser o primeiro ataque do combate.",tool:"Pressupõe arma de Uma Mão guardada até o saque."},
+    {id:"t17",name:"Postura da Água",class:"Samurai",grade:1,levelMin:1,prana:5,attr:"Instinto",type:"Defesa",effect:"Assume a Postura da Água, priorizando reação: até o próximo turno, ganha Reação adicional para reduzir a severidade de um dano em um nível.",tool:""},
+    {id:"t18",name:"Corte do Horizonte",class:"Samurai",grade:2,levelMin:2,prana:8,attr:"Agilidade/Precisão",type:"Impacto",effect:"Corte amplo e decisivo ao final de uma sequência: +d8 contra um alvo, ou +d6 dividido entre até dois alvos próximos.",tool:""},
+    {id:"t19",name:"Punho Sequencial",class:"Monge",grade:1,levelMin:1,prana:5,attr:"Agilidade/Precisão",type:"Sequência",effect:"Encadeia golpes desarmados rápidos: dois ataques contra o mesmo alvo, o segundo com metade do dano. Alimenta o Fluxo Interior.",tool:""},
+    {id:"t20",name:"Palma que Desvia",class:"Monge",grade:1,levelMin:1,prana:5,attr:"Instinto",type:"Defesa",effect:"Desvia um golpe recebido com as próprias mãos, reduzindo a severidade do dano em um nível, sem armadura ou escudo.",tool:""},
+    {id:"t21",name:"Golpe do Vazio",class:"Monge",grade:2,levelMin:2,prana:8,attr:"Agilidade/Precisão",type:"Impacto",effect:"Libera toda a energia do Fluxo Interior em um golpe desarmado: +d8 de dano, aumentado um grau por golpe conectado na cena. Ligada ao Impulso Vazio Interior.",tool:""}
+  ],
+
+  items: [
+    {id:"i1",category:"Arma",name:"Espada Longa",tier:1,attr:"Força",range:"Melee",damage:"d8+2",dtype:"PHY",burden:"1 mão",feature:"",desc:"Arma marcial padrão, versátil e confiável."},
+    {id:"i2",category:"Arma",name:"Espada do Crepúsculo",tier:2,attr:"Agilidade",range:"Melee",damage:"d8+3",dtype:"PHY",burden:"1 mão",feature:"Corte Crepuscular: uma vez por cena, ao obter Sucesso com Esperança num ataque, gaste o Mana/Prana gerado para +1d6 de dano.",desc:"Lâmina élfica que brilha como o entardecer."},
+    {id:"i3",category:"Arma",name:"Cajado Arcano",tier:1,attr:"Inteligência",range:"Longe",damage:"d8+2",dtype:"MAG",burden:"2 mãos",feature:"Canalização: ao conjurar magia de área, gaste 1 Mana para aumentar o alcance em uma categoria.",desc:"Ferramenta de conjuração e arma ao mesmo tempo."},
+    {id:"i4",category:"Arma",name:"Varinha de Safira",tier:2,attr:"Inteligência",range:"Longe",damage:"d8+2",dtype:"MAG",burden:"1 mão",feature:"Foco Rápido: uma vez por cena, gaste 1 Mana para conjurar sem a ação adicional normalmente exigida.",desc:"Núcleo mágico semiconsciente que reconhece o encantamento proferido."},
+    {id:"i5",category:"Armadura",name:"Gambeson",tier:1,attr:"",range:"",damage:"",dtype:"",burden:"",feature:"Flexible: +1 Evasão.",desc:"Armadura Leve - Major 5, Severe 11, Armor Score 3. Prioriza mobilidade."},
+    {id:"i6",category:"Armadura",name:"Couro",tier:1,attr:"",range:"",damage:"",dtype:"",burden:"",feature:"",desc:"Armadura Média - Major 6, Severe 13, Armor Score 3. Equilibra mobilidade e proteção."},
+    {id:"i7",category:"Armadura",name:"Cota de Malha",tier:1,attr:"",range:"",damage:"",dtype:"",burden:"",feature:"Heavy: -1 Evasão.",desc:"Armadura Pesada - Major 7, Severe 15, Armor Score 4. Prioriza proteção."},
+    {id:"i8",category:"Armadura",name:"Placas",tier:2,attr:"",range:"",damage:"",dtype:"",burden:"",feature:"Very Heavy: -2 Evasão e -1 Agilidade.",desc:"Armadura Muito Pesada - Major 8, Severe 17, Armor Score 4. Proteção extrema."},
+    {id:"i9",category:"Armadura",name:"Armadura de Escamas",tier:2,attr:"",range:"",damage:"",dtype:"",burden:"",feature:"Resistente: ao marcar o último Armor Slot, role 1d6; com 6, reduz a severidade sem marcar o Slot.",desc:"Major 9, Severe 20, Armor Score 4."},
+    {id:"i10",category:"Ferramenta Mágica",name:"Grimório do Astrólogo",tier:2,attr:"",range:"",damage:"",dtype:"",burden:"",feature:"Preparação: durante um descanso, prepare uma magia adicional.",desc:"Grimório voltado a conhecimento e preparação."},
+    {id:"i11",category:"Ferramenta Mágica",name:"Orbe Lunar",tier:2,attr:"",range:"",damage:"",dtype:"",burden:"",feature:"Foco Astral: gaste 1 Mana para aumentar em uma categoria o alcance de uma magia.",desc:"Orbe voltado a controle e manipulação."},
+    {id:"i12",category:"Item Mágico",name:"Talismã de Proteção",tier:2,attr:"",range:"",damage:"",dtype:"",burden:"",feature:"Barreira: uma vez por descanso, ao sofrer dano mágico, perca 1 Lucidez para reduzir a severidade em um nível.",desc:"Acessório protetor contra dano mágico."},
+    {id:"i13",category:"Consumível",name:"Poção de Cura",tier:1,attr:"",range:"",damage:"",dtype:"",burden:"",feature:"",desc:"Limpa 1d4 HP ao ser consumida."},
+    {id:"i14",category:"Consumível",name:"Poção de Vigor",tier:1,attr:"",range:"",damage:"",dtype:"",burden:"",feature:"",desc:"Recupera 1d4 pontos de Lucidez."},
+    {id:"i15",category:"Consumível",name:"Elixir Arcano",tier:1,attr:"",range:"",damage:"",dtype:"",burden:"",feature:"",desc:"Recupera uma quantidade determinada de Mana (escala com o Tier)."}
+  ],
+
+  characters: [],
+  particularities: [
+    {id:"pt_viciado",name:"Viciado",category:"Comportamento",description:"Você desenvolveu uma dependência física ou psicológica por uma substância, comportamento ou atividade específica.",effect:"Após satisfazer seu vício, sua próxima rolagem de teste recebe +1d4+1. Ao obter Sucesso com Esperança, recebe +1 ponto adicional do recurso gerado.",trigger:"Satisfazer o vício; Sucesso com Esperança; estar sob efeito durante combate.",limitation:"Enquanto estiver sob efeito do vício durante um combate, perde 2 de Lucidez por turno.",hyperfocus:"Após permanecer um período sem satisfazer o vício, ao fazê-lo recebe 25 de Lucidez Temporária.",abstinence:"Enquanto não estiver sob efeito do vício, sua Lucidez fica limitada a 50% do valor original. Role 1d4 para determinar seus Dados de Abstinência. Quando o Mestre determinar, role a quantidade indicada como desvantagem de 1d4."},
+    {id:"pt_artista_marcial",name:"Artista Marcial",category:"Treinamento",description:"Você possui treinamento especializado em combate desarmado.",effect:"Seus ataques desarmados podem ser utilizados com Técnicas que exijam treinamento marcial, conforme aprovação do Mestre.",trigger:"Sempre que uma regra ou Técnica reconhecer treinamento marcial.",limitation:"Nenhuma específica."},
+    {id:"pt_artesao",name:"Artesão",category:"Profissão",description:"Você possui conhecimento e prática na fabricação, reparo e manutenção de objetos.",effect:"Você pode fabricar, reparar e avaliar objetos quando possuir ferramentas e materiais apropriados. Em testes diretamente relacionados ao ofício, recebe +1d4.",trigger:"Testes de fabricação, reparo ou avaliação de objetos.",limitation:"Exige ferramentas e materiais quando a atividade exigir."},
+    {id:"pt_cozinheiro",name:"Cozinheiro",category:"Profissão",description:"Você sabe preparar refeições capazes de sustentar e beneficiar um grupo.",effect:"Durante um descanso, pode preparar uma refeição usando ingredientes apropriados. Quem consumir a refeição pode receber um benefício definido pela qualidade e pelos ingredientes.",trigger:"Preparação e consumo de uma refeição preparada por você.",limitation:"Exige ingredientes e tempo de preparo."},
+    {id:"pt_gigante",name:"Gigante",category:"Característica Física",description:"Seu corpo possui tamanho e força muito superiores ao padrão de sua espécie.",effect:"Você pode carregar mais peso, utilizar equipamentos Grandes e possuir maior alcance corporal quando o Mestre considerar apropriado.",trigger:"Situações em que seu tamanho e força sejam relevantes.",limitation:"Pode sofrer dificuldades em espaços pequenos e ter problemas para utilizar equipamentos comuns."},
+    {id:"pt_espada_colossal",name:"Espada Colossal",category:"Equipamento",description:"Você possui treinamento para utilizar uma espada de proporções extraordinárias.",effect:"Você pode equipar uma Espada Colossal. Ela ocupa os dois espaços de arma e possui propriedades próprias de Impacto, além de poder habilitar Técnicas exclusivas.",trigger:"Enquanto estiver empunhando uma Espada Colossal.",limitation:"Não pode utilizar uma arma secundária enquanto estiver empunhando a Espada Colossal."}
+  ]
+};
+
+/* Mecânicas - conteúdo estático (não editável, é a referência de regras do livro) */
+const MECHANICS = [
+  {title:"Duality Dice (2d12)",body:"O padrão de rolagem usa dois d12: um de Hope (a favor do personagem) e um de Fear (contra ele). Soma-se o resultado combinado ao Atributo relevante e compara-se com a Dificuldade. Se Hope > Fear num sucesso: Sucesso com Esperança (gera Mana/Prana). Se Fear > Hope num sucesso: Sucesso com Medo (o Mestre pode complicar)."},
+  {title:"Dificuldades de Referência",body:"",table:[["Trivial","8"],["Fácil","11"],["Média","14"],["Difícil","17"],["Muito Difícil","20"],["Quase Impossível","23+"]]},
+  {title:"Vantagem e Desvantagem",body:"Role um d6 adicional. Vantagem: some o maior entre ele e o valor do teste. Desvantagem: subtraia esse resultado. Não se acumulam além de um d6 cada; se ambas estiverem presentes, cancelam-se."},
+  {title:"Sucesso com Esperança",body:"Gera 3 Mana (classes mágicas) ou 1 Prana (classes físicas), utilizável imediatamente, inclusive para ativar Features."},
+  {title:"Condições",body:"",table:[["Vulnerável","Desvantagem em Evasão; ataques contra ele têm Vantagem"],["Restringido","Não pode se mover nem usar Técnicas/magias de Mobilidade"],["Enfraquecido","Desvantagem em testes de Força ou Agilidade"],["Atordoado","Perde a próxima Ação principal"],["Amedrontado","Desvantagem contra a fonte do medo; não se aproxima voluntariamente"]]},
+  {title:"Descanso",body:"Curto: recupera 1/4 de Vida e 1/4 de Mana/Prana, libera habilidades 'uma vez por descanso curto'. Longo: recupera toda Vida e todo Mana/Prana, libera habilidades 'uma vez por descanso longo'. Lucidez não se recupera automaticamente por descanso."},
+  {title:"Morte e Inconsciência",body:"Ao chegar a 0 de Vida, role os Duality Dice sem Atributo. Hope prevalecente: consciente com 1 Vida + Cicatriz. Fear prevalecente: inconsciente, começa a morrer. Dupla 12: levanta com metade da Vida máxima + Vantagem. Dupla 1: morte imediata."},
+  {title:"Progressão de Nível e Tier",body:"",table:[["Nível 1","Tier I · Proficiência 1"],["Nível 2 a 4","Tier II · Proficiência 2"],["Nível 5 a 7","Tier III · Proficiência 3"],["Nível 8 a 10","Tier IV · Proficiência 4"],["Nível 11 a 13","Tier V · Proficiência 5"],["Nível 14 a 16","Tier VI · Proficiência 6"],["Nível 17 a 20","Tier VII · Proficiência 7"]]},
+  {title:"Lucidez - visão geral",body:"Recurso numérico de estabilidade mental. Substitui Stress/Hope-pool/sanidade de outros sistemas. Toda 'marca de Stress' equivalente vira perda direta de Lucidez (normalmente 1 a 3 pontos)."},
+  {title:"Perda Catastrófica e Trauma",body:"Perder 21+ pontos de Lucidez de uma vez é uma Perda Catastrófica e gera 1 Trauma. Um Trauma reduz permanentemente o teto de Lucidez (Leve -5, Moderado -8, Grave -12, Severo -15 a -20) e carrega um gatilho/efeito próprio. Teto mínimo sugerido: 25."},
+  {title:"Limite de Traumas",body:"0: Normal · 1: Marcado · 2: Abalado · 3: Fraturado · 4: Traumatizado · 5+: Colapso Permanente (alteração profunda e permanente no personagem)."},
+  {title:"Ganho de Lucidez",body:"Três fontes: Uso Harmonioso (jogadas inteligentes sem comprar recurso com Lucidez na cena), Momentos Importantes da História (a critério do Mestre) e Superação (Lucidez atual abaixo de 25% do teto abre uma janela de até 3 sessões; alcançar 80% do teto concede bônus especial)."},
+  {title:"Compra de Recursos com Lucidez",body:"Quando Mana/Prana zeram: 5 Lucidez = 1 Mana, ou 3 Lucidez = 1 Prana. Sempre reduz a Lucidez atual, nunca o teto, e impede o ganho por Uso Harmonioso na cena."},
+  {title:"Equipamento - Tier e Dano",body:"Um personagem só equipa itens até seu próprio Tier. Dano de arma usa um dado + modificador fixo; a Proficiência determina quantos dados rolar (não aumenta o modificador). PHY = dano físico, MAG = dano mágico."},
+  {title:"Armor Slots e Severidade",body:"Dano tem 3 níveis: Minor (1 HP), Major (2 HP), Severe (3 HP). Cada Armor Slot marcado reduz a severidade em um nível (Severe→Major→Minor→Nada). Armor Score máximo: 12."},
+  {title:"Thresholds sem armadura",body:"Sem armadura: Armor Score 0. Major Threshold = Nível do personagem. Severe Threshold = Nível × 2. Sem Armor Score, sem Armor Slots."},
+  {title:"Círculos de Magia (custo de Mana)",body:"",table:[["Círculo I (Nv.1)","10–15 Mana"],["Círculo II (Nv.2-4)","20–25 Mana"],["Círculo III (Nv.5-7)","30–40 Mana"],["Círculo IV (Nv.8-10)","45–55 Mana"],["Círculo V (Nv.11-13)","60–70 Mana"],["Círculo VI (Nv.14-16)","75–90 Mana"],["Círculo VII (Nv.17-20)","95–110 Mana"]]},
+  {title:"Graus de Técnica (custo de Prana)",body:"",table:[["Grau I (Nv.1)","3–5 Prana"],["Grau II (Nv.2-4)","6–10 Prana"],["Grau III (Nv.5-7)","12–16 Prana"],["Grau IV (Nv.8-10)","18–24 Prana"],["Grau V (Nv.11-13)","26–32 Prana"],["Grau VI (Nv.14-16)","34–42 Prana"],["Grau VII (Nv.17-20)","44–55 Prana"]]},
+  {title:"Tipos de Técnica e Equipamento",body:"Impacto (Duas Mãos), Sequência (Duas Armas), Defesa (Escudo), Mobilidade (Armadura Leve), Resistência (Armadura Pesada/Muito Pesada), Precisão (Arma à Distância) e Utilidade (sem bônus de equipamento) - cada combinação certa permite gastar 1 Prana extra por um efeito adicional."},
+  {title:"Graus de Habilidade (Caminhos)",body:"Grau I Fundamento · Grau II Especialização · Grau III Avançada · Grau IV Mestre · Grau V Ápice. Um Caminho é uma árvore de Ramos e Nós - o jogador escolhe onde investir, não recebe tudo automaticamente."},
+  {title:"Reações e Holofote",body:"Brisa e Lamentações não utiliza turnos ou iniciativa. O Mestre conduz o Holofote pela ficção. Quando uma ação cria um gatilho, outra criatura pode responder por meio de uma Reação. Reações são respostas imediatas e dependem da situação, da habilidade do personagem e de seus equipamentos."},
+  {title:"Aparo",body:"Quando você for atingido por um ataque que possa ser aparado, pode usar sua Reação e rolar 1d6. Resultado 5 ou 6: o ataque é totalmente reduzido. Resultado 2, 3 ou 4: reduza a Severidade do ataque em um nível. Resultado 1: você sofre o ataque inteiro e fica Vulnerável por 1 rodada."},
+  {title:"Esquiva",body:"Quando você for alvo de um ataque que possa ser evitado por movimento, use sua Reação. Você e o atacante rolam 1d6. Empate: o ataque é desviado normalmente. Vitória por 1 ou 2: você desvia normalmente. Vitória por 3 ou mais: você desvia e o atacante fica Vulnerável por 1 rodada. Se você rolar 6 e o inimigo rolar 2 ou menos, você também pode realizar um Contra-ataque."},
+  {title:"Contra-ataque",body:"Quando uma Esquiva resultar em 6 contra 2 ou menos, o personagem obtém uma abertura imediata e pode realizar um Contra-ataque. O efeito específico do Contra-ataque será definido pelas ações, Técnicas, Classe, Caminho, arma e outras habilidades do personagem."},
+  {title:"Interações de Reação",body:"Classes, Caminhos, Particularidades, armas e outros equipamentos podem criar ou modificar Reações. Uma habilidade pode melhorar Aparo, Esquiva, Contra-ataque, Intervenção ou criar uma nova resposta, mantendo o princípio de que a Reação acontece por um gatilho ficcional."},
+  {title:"Particularidades",body:"Particularidades são características, conhecimentos, hábitos, condições ou especializações que tornam cada personagem único. Diferentemente das Experiences, que podem ser invocadas para receber +2 em um teste ao custo de 1 Lucidez, uma Particularidade pode alterar diretamente as regras do personagem: conceder bônus ou desvantagens, modificar Vida/Mana/Prana/Lucidez, criar recursos, ações, reações, condições, limitações ou interações especiais. Particularidades podem ser simples, como Artesão, Cozinheiro ou Artista Marcial, ou complexas, como Viciado. Uma Particularidade deve possuir uma identidade mecânica própria e não precisa obrigatoriamente possuir uma penalidade."}
+];
+
+/* =====================================================================
+   REAÇÕES
+   ===================================================================== */
+const REACTIONS = [
+  {
+    name:"Aparo", icon:"🛡️", type:"Universal", trigger:"Quando você for atingido por um ataque que possa ser aparado.",
+    effect:"Use sua Reação e role 1d6.",
+    results:[["5 ou 6","Aparo completo: reduza totalmente o ataque. Você não sofre o dano."],["2, 3 ou 4","Aparo parcial: reduza a Severidade do ataque em um nível."],["1","Falha no Aparo: sofra o ataque completo e fique Vulnerável por 1 rodada."]],
+    interactions:["Escudos podem receber habilidades que ampliem ou fortaleçam o Aparo.","Guardião pode especializar-se em Aparo e proteção.","Armas defensivas ou estilos marciais podem conceder respostas adicionais ao Aparo."]
+  },
+  {
+    name:"Esquiva", icon:"🏃", type:"Universal", trigger:"Quando você for alvo de um ataque que possa ser evitado por movimento.",
+    effect:"Você e o atacante rolam 1d6 e comparam os resultados.",
+    results:[["Empate","O ataque é desviado normalmente."],["Você vence por 1 ou 2","O ataque é desviado normalmente."],["Você vence por 3 ou mais","O ataque é desviado e o atacante fica Vulnerável por 1 rodada."],["Você rola 6 e o inimigo 2 ou menos","Além de desviar, você pode realizar um Contra-ataque."]],
+    interactions:["Armaduras leves podem favorecer estilos baseados em mobilidade.","Samurai, Monge, Ladino e Patrulheiro podem receber especializações ligadas à Esquiva.","Habilidades podem modificar o valor rolado, os gatilhos ou o efeito da Esquiva."]
+  },
+  {
+    name:"Contra-ataque", icon:"⚔️", type:"Especial", trigger:"Quando uma Esquiva resultar em 6 contra 2 ou menos, ou quando uma habilidade criar uma abertura para contra-atacar.",
+    effect:"Você pode aproveitar a abertura imediatamente para realizar um ataque. Técnicas ou habilidades podem substituir esse ataque por efeitos específicos.",
+    results:[],
+    interactions:["Guerreiro pode transformar aberturas em pressão ofensiva.","Guardião pode criar Contra-ataques defensivos ou de proteção.","Samurai pode conectar Contra-ataques às suas Posturas e técnicas de lâmina.","Armas e Técnicas podem conceder efeitos adicionais quando um Contra-ataque é ativado."]
+  },
+  {
+    name:"Intervenção", icon:"✋", type:"Especial", trigger:"Quando um aliado sofre uma ameaça que você consegue alcançar ou interferir.",
+    effect:"Uma habilidade, Classe, Caminho, Particularidade ou equipamento pode permitir que você use uma Reação para proteger ou alterar a situação.",
+    results:[],
+    interactions:["Guardião é o principal espaço para especializações de Intervenção.","Escudos podem ampliar as situações em que a Intervenção é possível.","O custo e o efeito dependem da habilidade que concede a Reação."]
+  },
+  {
+    name:"Interrupção", icon:"⛔", type:"Especial", trigger:"Quando uma criatura inicia uma ação que você possui meios narrativos ou mecânicos para interromper.",
+    effect:"Uma habilidade específica permite responder antes que a ação seja concluída.",
+    results:[],
+    interactions:["Magos e outras classes podem desenvolver Interrupções contra Magias.","Técnicas podem permitir interromper ações físicas.","O equipamento pode criar formas especiais de interromper ou desarmar uma ameaça."]
+  },
+  {
+    name:"Reação Preparada", icon:"◉", type:"Especial", trigger:"Quando você declara previamente uma condição e ela acontece na ficção.",
+    effect:"Você prepara uma resposta durante uma ação ou momento apropriado. Quando o gatilho acontece, a resposta pode ser executada imediatamente.",
+    results:[],
+    interactions:["A preparação deve ser específica o suficiente para o Mestre reconhecer quando o gatilho ocorreu.","Habilidades podem permitir preparar Técnicas, ataques ou outras respostas."]
+  }
+];
+
+function renderReacoes(){
+  const wrap=document.getElementById("gridReacoes"); if(!wrap) return;
+  wrap.innerHTML=REACTIONS.map(r=>`
+    <div class="card">
+      <div class="card-top"><div><h3>${r.icon} ${r.name}</h3><div class="sub">${r.type}</div></div></div>
+      <p><b>Gatilho:</b> ${r.trigger}</p>
+      <div class="notes-box"><b>Efeito:</b> ${r.effect}${r.results.length?`<br><br>${r.results.map(x=>`<b>${x[0]}:</b> ${x[1]}`).join("<br>")}`:""}</div>
+      ${r.interactions.length?`<div class="notes-box" style="margin-top:10px"><b>Interações:</b><ul style="margin:8px 0 0 18px">${r.interactions.map(x=>`<li>${x}</li>`).join("")}</ul></div>`:""}
+    </div>`).join("");
+}
+
+/* =====================================================================
+   ESTADO / PERSISTÊNCIA
+   ===================================================================== */
+const STORAGE_KEY = "bel_livro_jogador_v1";
+let DATA = loadData();
+
+function loadData(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      // garante que todas as coleções existem mesmo se o backup for parcial
+      return Object.assign(structuredCloneSafe(DEFAULT_DATA), parsed);
+    }
+  }catch(e){ console.warn("Falha ao carregar dados salvos, usando padrão.", e); }
+  return structuredCloneSafe(DEFAULT_DATA);
+}
+function structuredCloneSafe(obj){ return JSON.parse(JSON.stringify(obj)); }
+function persist(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA)); }
+function uid(prefix){ return prefix + "_" + Math.random().toString(36).slice(2,9); }
+
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+/* =====================================================================
+   NAVEGAÇÃO POR ABAS
+   ===================================================================== */
+document.getElementById("tabNav").addEventListener("click",(e)=>{
+  const btn = e.target.closest(".tab-btn");
+  if(!btn) return;
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.getElementById("tab-"+btn.dataset.tab).classList.add("active");
+});
+
+/* =====================================================================
+   MODAL genérico
+   ===================================================================== */
+function openModal(title, bodyHtml, onSubmit){
+  const overlay = document.getElementById("modalOverlay");
+  const box = document.getElementById("modalBox");
+  box.innerHTML = `
+    <div class="modal-head"><h2>${title}</h2><button class="modal-close" onclick="closeModal()">×</button></div>
+    <form id="modalForm">${bodyHtml}
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>`;
+  overlay.classList.remove("hidden");
+  document.getElementById("modalForm").addEventListener("submit",(e)=>{
+    e.preventDefault();
+    onSubmit(new FormData(e.target));
+  });
+}
+function closeModal(){ document.getElementById("modalOverlay").classList.add("hidden"); }
+document.getElementById("modalOverlay").addEventListener("click",(e)=>{ if(e.target.id==="modalOverlay") closeModal(); });
+document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeModal(); });
+
+function field(label, name, value, opts={}){
+  const full = opts.full ? "full" : "";
+  value = value===undefined||value===null? "" : value;
+  if(opts.textarea){
+    return `<div class="field ${full}"><label>${label}</label><textarea class="input" name="${name}">${escapeHtml(value)}</textarea>${opts.hint?`<div class="hint">${opts.hint}</div>`:""}</div>`;
+  }
+  if(opts.select){
+    const opsHtml = opts.select.map(o=>`<option value="${o}" ${o==value?"selected":""}>${o}</option>`).join("");
+    return `<div class="field ${full}"><label>${label}</label><select class="input" name="${name}">${opsHtml}</select></div>`;
+  }
+  const type = opts.number ? "number" : "text";
+  return `<div class="field ${full}"><label>${label}</label><input class="input" type="${type}" name="${name}" value="${escapeHtml(value)}" ${opts.required?"required":""}>${opts.hint?`<div class="hint">${opts.hint}</div>`:""}</div>`;
+}
+function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function parseLines(text){
+  // "Nome: Descrição" por linha -> [{name,desc}]
+  return String(text||"").split("\n").map(l=>l.trim()).filter(Boolean).map(l=>{
+    const idx = l.indexOf(":");
+    if(idx===-1) return {name:l, desc:""};
+    return {name:l.slice(0,idx).trim(), desc:l.slice(idx+1).trim()};
+  });
+}
+function traitsToLines(traits){ return (traits||[]).map(t=>`${t.name}: ${t.desc}`).join("\n"); }
+
+/* =====================================================================
+   RAÇAS
+   ===================================================================== */
+function renderRacas(){
+  const q = (document.getElementById("searchRacas").value||"").toLowerCase();
+  const wrap = document.getElementById("gridRacas");
+  const list = DATA.races.filter(r=>r.name.toLowerCase().includes(q) || (r.identity||"").toLowerCase().includes(q));
+  if(list.length===0){ wrap.innerHTML = emptyState("Nenhuma raça encontrada.", "openRaceForm()"); updateStats(); return; }
+  wrap.innerHTML = list.map(r=>`
+    <div class="card">
+      <div class="card-top">
+        <div class="card-title">${r.name}</div>
+        <div class="card-tag ${r.custom?"tag-custom":""}">${r.custom?"Personalizada":"Base"}</div>
+      </div>
+      <div class="card-meta"><span>Bônus: <b>${r.bonus||"—"}</b></span></div>
+      <div class="card-body">${r.identity||""}${r.appearance?`<br><span style="color:var(--text-faint)">${r.appearance}</span>`:""}</div>
+      <ul class="trait-list">${(r.traits||[]).map(t=>`<li><b>${t.name}</b>${t.desc?": "+t.desc:""}</li>`).join("")}</ul>
+      <div class="card-foot">
+        <button class="btn btn-sm" onclick="openRaceForm('${r.id}')">Editar</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteEntity('races','${r.id}','raça')">Remover</button>
+      </div>
+    </div>`).join("");
+  updateStats();
+}
+function openRaceForm(id){
+  const r = id ? DATA.races.find(x=>x.id===id) : null;
+  const body = `<div class="form-grid">
+    ${field("Nome","name",r?.name,{required:true})}
+    ${field("Bônus Simples","bonus",r?.bonus)}
+    ${field("Aparência / expectativa de vida","appearance",r?.appearance,{full:true})}
+    ${field("Identidade","identity",r?.identity,{textarea:true,full:true})}
+    ${field("Traços Marcantes","traits",traitsToLines(r?.traits),{textarea:true,full:true,hint:"Um traço por linha, no formato: Nome: Descrição"})}
+  </div>`;
+  openModal(id?"Editar raça":"Nova raça", body, (fd)=>{
+    const obj = {
+      id: id || uid("r"),
+      name: fd.get("name").trim(),
+      bonus: fd.get("bonus").trim(),
+      appearance: fd.get("appearance").trim(),
+      identity: fd.get("identity").trim(),
+      traits: parseLines(fd.get("traits")),
+      custom: id ? (r?.custom||false) : true
+    };
+    if(id){ const i = DATA.races.findIndex(x=>x.id===id); DATA.races[i]=obj; }
+    else DATA.races.push(obj);
+    persist(); closeModal(); renderRacas(); showToast(id?"Raça atualizada.":"Raça criada.");
+  });
+}
+
+/* =====================================================================
+   CLASSES
+   ===================================================================== */
+let classTypeFilter = "";
+document.getElementById("filterClassType").addEventListener("click",(e)=>{
+  const c = e.target.closest(".chip"); if(!c) return;
+  document.querySelectorAll("#filterClassType .chip").forEach(x=>x.classList.remove("active"));
+  c.classList.add("active"); classTypeFilter = c.dataset.val; renderClasses();
+});
+function renderClasses(){
+  const q = (document.getElementById("searchClasses").value||"").toLowerCase();
+  const wrap = document.getElementById("gridClasses");
+  let list = DATA.classes.filter(c=>c.name.toLowerCase().includes(q));
+  if(classTypeFilter) list = list.filter(c=>c.type===classTypeFilter);
+  if(list.length===0){ wrap.innerHTML = emptyState("Nenhuma classe encontrada.", "openClassForm()"); updateStats(); return; }
+  wrap.innerHTML = list.map(c=>`
+    <div class="card">
+      <div class="card-top">
+        <div class="card-title">${c.name}</div>
+        <div class="card-tag ${c.type==='Física'?'tag-fisica':'tag-magica'}">${c.type}</div>
+      </div>
+      <div class="card-meta"><span>Recurso: <b>${c.resource} ${c.resourceMax}</b></span><span>Lucidez: <b>${c.lucidityMax}</b></span></div>
+      <div class="card-meta"><span>Atributos: <b>${c.attrs||"—"}</b></span></div>
+      <div class="card-body">${c.identity||""}</div>
+      <ul class="trait-list">
+        ${(c.features||[]).map(f=>`<li><b>${f.name}</b>${f.desc?": "+f.desc:""}</li>`).join("")}
+        ${c.impulse?`<li><b>Impulso - ${c.impulse.name}</b>: ${c.impulse.desc}</li>`:""}
+        ${(c.paths||[]).map(p=>`<li><b>Caminho: ${p.name}</b> (${p.focus||""}) - ${p.areas||""}</li>`).join("")}
+      </ul>
+      <div class="card-foot">
+        <button class="btn btn-sm" onclick="openClassForm('${c.id}')">Editar</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteEntity('classes','${c.id}','classe')">Remover</button>
+      </div>
+    </div>`).join("");
+  updateStats();
+}
+function featuresToLines(list){ return (list||[]).map(f=>`${f.name}: ${f.desc}`).join("\n"); }
+function pathsToLines(list){ return (list||[]).map(p=>`${p.name} | ${p.focus} | ${p.areas}`).join("\n"); }
+function parsePaths(text){
+  return String(text||"").split("\n").map(l=>l.trim()).filter(Boolean).map(l=>{
+    const parts = l.split("|").map(x=>x.trim());
+    return {name:parts[0]||"", focus:parts[1]||"", areas:parts[2]||""};
+  });
+}
+function openClassForm(id){
+  const c = id ? DATA.classes.find(x=>x.id===id) : null;
+  const body = `<div class="form-grid">
+    ${field("Nome","name",c?.name,{required:true})}
+    ${field("Tipo","type",c?.type||"Física",{select:["Física","Mágica"]})}
+    ${field("Recurso principal","resource",c?.resource||"Prana",{select:["Prana","Mana"]})}
+    ${field("Máximo do recurso","resourceMax",c?.resourceMax,{number:true})}
+    ${field("Lucidez máxima inicial","lucidityMax",c?.lucidityMax||80,{number:true})}
+    ${field("Atributos predominantes","attrs",c?.attrs,{full:true})}
+    ${field("Identidade","identity",c?.identity,{textarea:true,full:true})}
+    ${field("Características de Classe","features",featuresToLines(c?.features),{textarea:true,full:true,hint:"Uma por linha: Nome: Descrição"})}
+    ${field("Impulso (nome)","impulseName",c?.impulse?.name)}
+    ${field("Impulso (efeito)","impulseDesc",c?.impulse?.desc)}
+    ${field("Caminhos","paths",pathsToLines(c?.paths),{textarea:true,full:true,hint:"Um por linha: Nome do Caminho | Foco | Áreas da árvore (separadas por vírgula)"})}
+  </div>`;
+  openModal(id?"Editar classe":"Nova classe", body, (fd)=>{
+    const obj = {
+      id: id || uid("c"),
+      name: fd.get("name").trim(),
+      type: fd.get("type"),
+      resource: fd.get("resource"),
+      resourceMax: Number(fd.get("resourceMax"))||0,
+      lucidityMax: Number(fd.get("lucidityMax"))||80,
+      attrs: fd.get("attrs").trim(),
+      identity: fd.get("identity").trim(),
+      features: parseLines(fd.get("features")),
+      impulse: { name: fd.get("impulseName").trim(), desc: fd.get("impulseDesc").trim() },
+      paths: parsePaths(fd.get("paths")),
+      custom: id ? (c?.custom||false) : true
+    };
+    if(id){ const i = DATA.classes.findIndex(x=>x.id===id); DATA.classes[i]=obj; }
+    else DATA.classes.push(obj);
+    persist(); closeModal(); renderClasses(); populateClassSelects(); renderCharForms&&null; showToast(id?"Classe atualizada.":"Classe criada.");
+  });
+}
+
+/* =====================================================================
+   MAGIAS
+   ===================================================================== */
+function populateClassSelects(){
+  const classNames = DATA.classes.filter(c=>c.type==="Mágica").map(c=>c.name);
+  const allClassNames = DATA.classes.map(c=>c.name);
+  const selMagia = document.getElementById("filterMagiaClasse");
+  selMagia.innerHTML = `<option value="">Todas as classes</option>` + [...new Set([...classNames, ...DATA.spells.map(s=>s.class)])].map(n=>`<option value="${n}">${n}</option>`).join("");
+  const selTec = document.getElementById("filterTecClasse");
+  selTec.innerHTML = `<option value="">Todas as classes</option>` + [...new Set([...DATA.classes.filter(c=>c.type==="Física").map(c=>c.name), ...DATA.techniques.map(t=>t.class)])].map(n=>`<option value="${n}">${n}</option>`).join("");
+}
+function renderSpells(){
+  const q = (document.getElementById("searchMagias").value||"").toLowerCase();
+  const cls = document.getElementById("filterMagiaClasse").value;
+  const wrap = document.getElementById("gridMagias");
+  let list = DATA.spells.filter(s=>s.name.toLowerCase().includes(q));
+  if(cls) list = list.filter(s=>s.class===cls);
+  if(list.length===0){ wrap.innerHTML = emptyState("Nenhuma magia encontrada.", "openSpellForm()"); updateStats(); return; }
+  wrap.innerHTML = list.map(s=>`
+    <div class="card">
+      <div class="card-top"><div class="card-title">${s.name}</div><div class="card-tag tag-magica">Círculo ${s.circle}</div></div>
+      <div class="card-meta"><span>Classe: <b>${s.class}</b></span><span>Nv. mín.: <b>${s.levelMin}</b></span></div>
+      <div class="card-meta"><span>Custo: <b>${s.mana} Mana</b></span><span>Atributo: <b>${s.attr}</b></span><span>Alcance: <b>${s.range}</b></span></div>
+      ${s.damage?`<div class="card-meta"><span>Dano: <b>${s.damage}</b></span></div>`:""}
+      <div class="card-body">${s.effect||""}</div>
+      <div class="card-foot">
+        <button class="btn btn-sm" onclick="openSpellForm('${s.id}')">Editar</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteEntity('spells','${s.id}','magia')">Remover</button>
+      </div>
+    </div>`).join("");
+  updateStats();
+}
+function openSpellForm(id){
+  const s = id ? DATA.spells.find(x=>x.id===id) : null;
+  const classOptions = DATA.classes.map(c=>c.name);
+  const body = `<div class="form-grid">
+    ${field("Nome","name",s?.name,{required:true})}
+    ${field("Classe","class",s?.class||classOptions[0],{select:classOptions})}
+    ${field("Círculo (1-7)","circle",s?.circle||1,{number:true})}
+    ${field("Nível mínimo","levelMin",s?.levelMin||1,{number:true})}
+    ${field("Custo de Mana","mana",s?.mana||10,{number:true})}
+    ${field("Atributo","attr",s?.attr)}
+    ${field("Alcance","range",s?.range||"Perto",{select:["Melee","Muito Perto","Perto","Longe","Muito Longe"]})}
+    ${field("Dano (opcional)","damage",s?.damage)}
+    ${field("Efeito","effect",s?.effect,{textarea:true,full:true})}
+  </div>`;
+  openModal(id?"Editar magia":"Nova magia", body, (fd)=>{
+    const obj = {
+      id: id||uid("s"), name: fd.get("name").trim(), class: fd.get("class"),
+      circle: Number(fd.get("circle"))||1, levelMin: Number(fd.get("levelMin"))||1,
+      mana: Number(fd.get("mana"))||0, attr: fd.get("attr").trim(),
+      range: fd.get("range"), damage: fd.get("damage").trim(), effect: fd.get("effect").trim()
+    };
+    if(id){ const i=DATA.spells.findIndex(x=>x.id===id); DATA.spells[i]=obj; } else DATA.spells.push(obj);
+    persist(); closeModal(); populateClassSelects(); renderSpells(); showToast(id?"Magia atualizada.":"Magia criada.");
+  });
+}
+
+/* =====================================================================
+   TÉCNICAS
+   ===================================================================== */
+function renderTechs(){
+  const q = (document.getElementById("searchTecnicas").value||"").toLowerCase();
+  const cls = document.getElementById("filterTecClasse").value;
+  const wrap = document.getElementById("gridTecnicas");
+  let list = DATA.techniques.filter(t=>t.name.toLowerCase().includes(q));
+  if(cls) list = list.filter(t=>t.class===cls);
+  if(list.length===0){ wrap.innerHTML = emptyState("Nenhuma técnica encontrada.", "openTechForm()"); updateStats(); return; }
+  wrap.innerHTML = list.map(t=>`
+    <div class="card">
+      <div class="card-top"><div class="card-title">${t.name}</div><div class="card-tag tag-fisica">Grau ${t.grade}</div></div>
+      <div class="card-meta"><span>Classe: <b>${t.class}</b></span><span>Nv. mín.: <b>${t.levelMin}</b></span></div>
+      <div class="card-meta"><span>Custo: <b>${t.prana} Prana</b></span><span>Atributo: <b>${t.attr}</b></span><span>Tipo: <b>${t.type}</b></span></div>
+      <div class="card-body">${t.effect||""}${t.tool?`<br><span style="color:var(--text-faint)">${t.tool}</span>`:""}</div>
+      <div class="card-foot">
+        <button class="btn btn-sm" onclick="openTechForm('${t.id}')">Editar</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteEntity('techniques','${t.id}','técnica')">Remover</button>
+      </div>
+    </div>`).join("");
+  updateStats();
+}
+function openTechForm(id){
+  const t = id ? DATA.techniques.find(x=>x.id===id) : null;
+  const classOptions = DATA.classes.map(c=>c.name);
+  const body = `<div class="form-grid">
+    ${field("Nome","name",t?.name,{required:true})}
+    ${field("Classe","class",t?.class||classOptions[0],{select:classOptions})}
+    ${field("Grau (1-7)","grade",t?.grade||1,{number:true})}
+    ${field("Nível mínimo","levelMin",t?.levelMin||1,{number:true})}
+    ${field("Custo de Prana","prana",t?.prana||5,{number:true})}
+    ${field("Atributo","attr",t?.attr)}
+    ${field("Tipo","type",t?.type||"Impacto",{select:["Impacto","Sequência","Defesa","Mobilidade","Resistência","Precisão","Utilidade"]})}
+    ${field("Efeito","effect",t?.effect,{textarea:true,full:true})}
+    ${field("Ferramenta recomendada","tool",t?.tool,{textarea:true,full:true})}
+  </div>`;
+  openModal(id?"Editar técnica":"Nova técnica", body, (fd)=>{
+    const obj = {
+      id: id||uid("t"), name: fd.get("name").trim(), class: fd.get("class"),
+      grade: Number(fd.get("grade"))||1, levelMin: Number(fd.get("levelMin"))||1,
+      prana: Number(fd.get("prana"))||0, attr: fd.get("attr").trim(), type: fd.get("type"),
+      effect: fd.get("effect").trim(), tool: fd.get("tool").trim()
+    };
+    if(id){ const i=DATA.techniques.findIndex(x=>x.id===id); DATA.techniques[i]=obj; } else DATA.techniques.push(obj);
+    persist(); closeModal(); populateClassSelects(); renderTechs(); showToast(id?"Técnica atualizada.":"Técnica criada.");
+  });
+}
+
+/* =====================================================================
+   ITENS
+   ===================================================================== */
+let itemCatFilter = "";
+document.getElementById("filterItemCat").addEventListener("click",(e)=>{
+  const c = e.target.closest(".chip"); if(!c) return;
+  document.querySelectorAll("#filterItemCat .chip").forEach(x=>x.classList.remove("active"));
+  c.classList.add("active"); itemCatFilter = c.dataset.val; renderItems();
+});
+function renderItems(){
+  const q = (document.getElementById("searchItens").value||"").toLowerCase();
+  const wrap = document.getElementById("gridItens");
+  let list = DATA.items.filter(i=>i.name.toLowerCase().includes(q));
+  if(itemCatFilter) list = list.filter(i=>i.category===itemCatFilter);
+  if(list.length===0){ wrap.innerHTML = emptyState("Nenhum item encontrado.", "openItemForm()"); updateStats(); return; }
+  wrap.innerHTML = list.map(i=>`
+    <div class="card">
+      <div class="card-top"><div class="card-title">${i.name}</div><div class="card-tag">Tier ${i.tier}</div></div>
+      <div class="card-meta"><span><b>${i.category}</b></span>
+        ${i.attr?`<span>Traço: <b>${i.attr}</b></span>`:""}
+        ${i.range?`<span>Alcance: <b>${i.range}</b></span>`:""}
+      </div>
+      ${i.damage?`<div class="card-meta"><span>Dano: <b>${i.damage} ${i.dtype||""}</b></span>${i.burden?`<span>Burden: <b>${i.burden}</b></span>`:""}</div>`:""}
+      <div class="card-body">${i.desc||""}${i.feature?`<br><b style="color:var(--text)">Feature:</b> ${i.feature}`:""}</div>
+      <div class="card-foot">
+        <button class="btn btn-sm" onclick="openItemForm('${i.id}')">Editar</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteEntity('items','${i.id}','item')">Remover</button>
+      </div>
+    </div>`).join("");
+  updateStats();
+}
+function openItemForm(id){
+  const i = id ? DATA.items.find(x=>x.id===id) : null;
+  const body = `<div class="form-grid">
+    ${field("Nome","name",i?.name,{required:true})}
+    ${field("Categoria","category",i?.category||"Arma",{select:["Arma","Armadura","Ferramenta Mágica","Item Mágico","Consumível"]})}
+    ${field("Tier (1-7)","tier",i?.tier||1,{number:true})}
+    ${field("Traço/Atributo","attr",i?.attr)}
+    ${field("Alcance","range",i?.range||"",{select:["","Melee","Muito Perto","Perto","Longe","Muito Longe"]})}
+    ${field("Dado de Dano","damage",i?.damage)}
+    ${field("Tipo de Dano","dtype",i?.dtype||"",{select:["","PHY","MAG"]})}
+    ${field("Burden (mãos)","burden",i?.burden)}
+    ${field("Feature","feature",i?.feature,{textarea:true,full:true})}
+    ${field("Descrição","desc",i?.desc,{textarea:true,full:true})}
+  </div>`;
+  openModal(id?"Editar item":"Novo item", body, (fd)=>{
+    const obj = {
+      id: id||uid("i"), name: fd.get("name").trim(), category: fd.get("category"),
+      tier: Number(fd.get("tier"))||1, attr: fd.get("attr").trim(), range: fd.get("range"),
+      damage: fd.get("damage").trim(), dtype: fd.get("dtype"), burden: fd.get("burden").trim(),
+      feature: fd.get("feature").trim(), desc: fd.get("desc").trim()
+    };
+    if(id){ const idx=DATA.items.findIndex(x=>x.id===id); DATA.items[idx]=obj; } else DATA.items.push(obj);
+    persist(); closeModal(); renderItems(); showToast(id?"Item atualizado.":"Item criado.");
+  });
+}
+
+/* =====================================================================
+   PERSONAGENS
+   ===================================================================== */
+let currentCharId = null;
+
+function particularityField(selected){
+  const names = selected || [];
+  const options = (DATA.particularities||[]).map(x=>`<label class="check-option"><input type="checkbox" name="particularities" value="${x.name}" ${names.includes(x.name)?"checked":""}> <span>${x.name}</span></label>`).join("");
+  return `<div class="field full"><label>Particularidades</label><div class="check-grid">${options||'<span class="hint">Nenhuma particularidade cadastrada.</span>'}</div><div class="hint">Você pode selecionar várias. Elas representam características mecânicas do personagem, não apenas bônus de teste.</div></div>`;
+}
+
+function renderParticularidades(){
+  const wrap=document.getElementById("gridParticularidades"); if(!wrap) return;
+  const q=(document.getElementById("searchParticularidades")?.value||"").toLowerCase();
+  const list=(DATA.particularities||[]).filter(x=>(x.name+" "+x.category+" "+x.description).toLowerCase().includes(q));
+  if(!list.length){wrap.innerHTML=emptyState("Nenhuma particularidade encontrada.","openParticularidadeForm()");return;}
+  wrap.innerHTML=list.map(x=>`<div class="card"><div class="card-top"><div><h3>${x.name}</h3><div class="sub">${x.category||"Geral"}</div></div><div class="card-actions"><button class="btn btn-sm" onclick="openParticularidadeForm('${x.id}')">Editar</button><button class="btn btn-sm btn-danger" onclick="deleteParticularidade('${x.id}')">Remover</button></div></div><p>${x.description||""}</p><div class="notes-box"><b>Efeito:</b> ${x.effect||"Não definido."}${x.trigger?`<br><br><b>Gatilho:</b> ${x.trigger}`:""}${x.limitation?`<br><br><b>Limitação:</b> ${x.limitation}`:""}${x.hyperfocus?`<br><br><b>Hiperfoco:</b> ${x.hyperfocus}`:""}${x.abstinence?`<br><br><b>Abstinência:</b> ${x.abstinence}`:""}</div></div>`).join("");
+}
+function openParticularidadeForm(id){
+  const p=id?(DATA.particularities||[]).find(x=>x.id===id):null;
+  const body=`<div class="form-grid">
+    ${field("Nome","name",p?.name,{required:true,full:true})}
+    ${field("Categoria","category",p?.category||"Geral")}
+    ${field("Descrição","description",p?.description,{textarea:true,full:true})}
+    ${field("Efeito","effect",p?.effect,{textarea:true,full:true})}
+    ${field("Gatilho","trigger",p?.trigger,{textarea:true,full:true})}
+    ${field("Limitação","limitation",p?.limitation,{textarea:true,full:true})}
+    ${field("Hiperfoco / efeito adicional","hyperfocus",p?.hyperfocus,{textarea:true,full:true})}
+    ${field("Abstinência / consequência adicional","abstinence",p?.abstinence,{textarea:true,full:true})}
+  </div>`;
+  openModal(id?"Editar particularidade":"Nova particularidade",body,fd=>{
+    const obj={id:id||uid("pt"),name:fd.get("name").trim(),category:fd.get("category").trim()||"Geral",description:fd.get("description").trim(),effect:fd.get("effect").trim(),trigger:fd.get("trigger").trim(),limitation:fd.get("limitation").trim(),hyperfocus:fd.get("hyperfocus").trim(),abstinence:fd.get("abstinence").trim()};
+    if(id){const i=DATA.particularities.findIndex(x=>x.id===id);DATA.particularities[i]=obj;}else DATA.particularities.push(obj);
+    persist();closeModal();renderParticularidades();showToast(id?"Particularidade atualizada.":"Particularidade criada.");
+  });
+}
+function deleteParticularidade(id){
+  const p=(DATA.particularities||[]).find(x=>x.id===id); if(!p)return;
+  if(!confirm(`Remover a particularidade "${p.name}"?`))return;
+  DATA.particularities=DATA.particularities.filter(x=>x.id!==id);
+  DATA.characters.forEach(c=>{c.particularities=(c.particularities||[]).filter(x=>x!==p.name);});
+  persist();renderParticularidades();renderPersonagens();showToast("Particularidade removida.");
+}
+
+function renderPersonagens(){
+  const wrap = document.getElementById("gridPersonagens");
+  document.getElementById("charSheetWrap").innerHTML = "";
+  if(DATA.characters.length===0){ wrap.innerHTML = emptyState("Nenhum personagem criado ainda.", "openCharForm()"); updateStats(); return; }
+  wrap.innerHTML = DATA.characters.map(p=>`
+    <div class="char-card" onclick="viewChar('${p.id}')">
+      <h3>${p.name||"Sem nome"}</h3>
+      <div class="sub">${p.race||"—"} · ${p.class||"—"} ${p.path?("· "+p.path):""} · Nível ${p.level||1}</div>
+      ${barRow("Vida", p.vida, p.vidaMax, "vida")}
+      ${barRow(p.resourceName||"Recurso", p.recurso, p.recursoMax, "recurso")}
+      ${barRow("Lucidez", p.lucidez, p.lucidezMax, "lucidez")}
+    </div>`).join("");
+  updateStats();
+}
+function barRow(label, val, max, cls){
+  val = Number(val)||0; max = Number(max)||1;
+  const pct = Math.max(0, Math.min(100, (val/max)*100));
+  return `<div class="bar-row"><span class="label">${label}</span><div class="bar-track"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div><span class="bar-val">${val}/${max}</span></div>`;
+}
+
+function openCharForm(id){
+  const p = id ? DATA.characters.find(x=>x.id===id) : null;
+  const raceOptions = DATA.races.map(r=>r.name);
+  const classOptions = DATA.classes.map(c=>c.name);
+  const body = `<div class="form-grid">
+    ${field("Nome do personagem","name",p?.name,{required:true,full:true})}
+    ${field("Raça","race",p?.race||raceOptions[0],{select:raceOptions})}
+    ${field("Classe","class",p?.class||classOptions[0],{select:classOptions})}
+    ${field("Caminho","path",p?.path)}
+    ${field("Nível","level",p?.level||1,{number:true})}
+    ${field("Força","forca",p?.attributes?.forca||0,{number:true})}
+    ${field("Agilidade","agilidade",p?.attributes?.agilidade||0,{number:true})}
+    ${field("Precisão","precisao",p?.attributes?.precisao||0,{number:true})}
+    ${field("Instinto","instinto",p?.attributes?.instinto||0,{number:true})}
+    ${field("Presença","presenca",p?.attributes?.presenca||0,{number:true})}
+    ${field("Inteligência","inteligencia",p?.attributes?.inteligencia||0,{number:true})}
+    ${field("Vida atual","vida",p?.vida,{number:true})}
+    ${field("Vida máxima","vidaMax",p?.vidaMax,{number:true})}
+    ${field("Recurso atual (Mana/Prana)","recurso",p?.recurso,{number:true})}
+    ${field("Recurso máximo","recursoMax",p?.recursoMax,{number:true})}
+    ${field("Lucidez atual","lucidez",p?.lucidez,{number:true})}
+    ${field("Lucidez máxima","lucidezMax",p?.lucidezMax,{number:true})}
+    ${field("Evasão","evasao",p?.evasao,{number:true})}
+    ${field("Experiences","experiences",(p?.experiences||[]).join("\n"),{textarea:true,full:true,hint:"Uma por linha"})}
+    ${particularityField(p?.particularities||[])}
+    ${field("Equipamento (arma, armadura, itens)","equipment",p?.equipment,{textarea:true,full:true})}
+    ${field("Traços / Características / Impulso","traits",p?.traits,{textarea:true,full:true})}
+    ${field("Anotações da identidade / história","notes",p?.notes,{textarea:true,full:true})}
+  </div>
+  <div class="hint" style="margin-top:10px;">Dica: deixe Vida/Recurso/Lucidez em branco e clique em "Salvar" - depois use o botão "Recalcular por Raça/Classe" na ficha para preencher automaticamente.</div>`;
+  openModal(id?"Editar personagem":"Novo personagem", body, (fd)=>{
+    const obj = {
+      id: id || uid("p"),
+      name: fd.get("name").trim(), race: fd.get("race"), class: fd.get("class"),
+      path: fd.get("path").trim(), level: Number(fd.get("level"))||1,
+      attributes:{
+        forca:Number(fd.get("forca"))||0, agilidade:Number(fd.get("agilidade"))||0, precisao:Number(fd.get("precisao"))||0,
+        instinto:Number(fd.get("instinto"))||0, presenca:Number(fd.get("presenca"))||0, inteligencia:Number(fd.get("inteligencia"))||0
+      },
+      vida: numOrCalc(fd.get("vida")), vidaMax: numOrCalc(fd.get("vidaMax")),
+      recurso: numOrCalc(fd.get("recurso")), recursoMax: numOrCalc(fd.get("recursoMax")),
+      lucidez: numOrCalc(fd.get("lucidez")), lucidezMax: numOrCalc(fd.get("lucidezMax")),
+      evasao: numOrCalc(fd.get("evasao")),
+      experiences: String(fd.get("experiences")||"").split("\n").map(s=>s.trim()).filter(Boolean),
+      particularities: fd.getAll("particularities"),
+      equipment: fd.get("equipment").trim(),
+      traits: fd.get("traits").trim(),
+      notes: fd.get("notes").trim()
+    };
+    const cls = DATA.classes.find(c=>c.name===obj.class);
+    obj.resourceName = cls?cls.resource:"Recurso";
+    // preenche automaticamente o que ficou vazio
+    autofillChar(obj, cls);
+    if(id){ const i=DATA.characters.findIndex(x=>x.id===id); DATA.characters[i]=obj; } else DATA.characters.push(obj);
+    persist(); closeModal(); renderPersonagens();
+    if(id) viewChar(id); else viewChar(obj.id);
+    showToast(id?"Personagem atualizado.":"Personagem criado.");
+  });
+}
+function numOrCalc(v){ return (v===""||v===null||v===undefined) ? null : Number(v); }
+function autofillChar(obj, cls){
+  const isPhysical = cls ? cls.type==="Física" : true;
+  if(obj.vidaMax===null) obj.vidaMax = isPhysical?7:6;
+  if(obj.vida===null) obj.vida = obj.vidaMax;
+  if(obj.recursoMax===null) obj.recursoMax = cls?cls.resourceMax:20;
+  if(obj.recurso===null) obj.recurso = obj.recursoMax;
+  if(obj.lucidezMax===null) obj.lucidezMax = cls?cls.lucidityMax:(isPhysical?80:100);
+  if(obj.lucidez===null) obj.lucidez = obj.lucidezMax;
+  if(obj.evasao===null) obj.evasao = 10 + (Number(obj.attributes.agilidade)||0);
+}
+function recalcChar(id){
+  const p = DATA.characters.find(x=>x.id===id); if(!p) return;
+  const cls = DATA.classes.find(c=>c.name===p.class);
+  const isPhysical = cls ? cls.type==="Física" : true;
+  p.vidaMax = isPhysical?7:6; p.vida = Math.min(p.vida??p.vidaMax, p.vidaMax);
+  p.recursoMax = cls?cls.resourceMax:20; p.recurso = p.recursoMax;
+  p.lucidezMax = cls?cls.lucidityMax:(isPhysical?80:100); p.lucidez = p.lucidezMax;
+  p.evasao = 10 + (Number(p.attributes.agilidade)||0);
+  p.resourceName = cls?cls.resource:"Recurso";
+  persist(); viewChar(id); renderPersonagens(); showToast("Recursos recalculados a partir da Classe.");
+}
+
+function viewChar(id){
+  currentCharId = id;
+  const p = DATA.characters.find(x=>x.id===id); if(!p) return;
+  const a = p.attributes||{};
+  const attrDisplay = (label,val)=>`<div class="attr-box"><div class="name">${label}</div><div class="val ${val>0?'pos':(val<0?'neg':'')}">${val>=0?"+":""}${val}</div></div>`;
+  const html = `
+    <div class="sheet">
+      <div class="sheet-head">
+        <div>
+          <h2>${p.name}</h2>
+          <div class="sub">${p.race} · ${p.class}${p.path?" · "+p.path:""} · Nível ${p.level} </div>
+        </div>
+        <div class="section-actions">
+          <button class="btn btn-sm" onclick="recalcChar('${p.id}')">↻ Recalcular por Raça/Classe</button>
+          <button class="btn btn-sm" onclick="openCharForm('${p.id}')">Editar</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteChar('${p.id}')">Remover</button>
+        </div>
+      </div>
+      <div class="sheet-cols">
+        <div>
+          <div class="res-block"><h4>ATRIBUTOS</h4>
+            <div class="attr-grid">
+              ${attrDisplay("Força",a.forca)}${attrDisplay("Agilidade",a.agilidade)}${attrDisplay("Precisão",a.precisao)}
+              ${attrDisplay("Instinto",a.instinto)}${attrDisplay("Presença",a.presenca)}${attrDisplay("Inteligência",a.inteligencia)}
+            </div>
+          </div>
+          <div class="res-block"><h4>RECURSOS</h4>
+            ${barRow("Vida", p.vida, p.vidaMax, "vida")}
+            ${barRow(p.resourceName||"Recurso", p.recurso, p.recursoMax, "recurso")}
+            ${barRow("Lucidez", p.lucidez, p.lucidezMax, "lucidez")}
+            <div class="tag-row"><span class="tagpill">Evasão ${p.evasao}</span></div>
+          </div>
+          <div class="res-block"><h4>EXPERIENCES</h4>
+            <div class="tag-row">${(p.experiences||[]).map(e=>`<span class="tagpill">${e}</span>`).join("")||'<span class="tagpill">—</span>'}</div>
+          </div>
+          <div class="res-block"><h4>PARTICULARIDADES</h4>
+            <div class="tag-row">${(p.particularities||[]).map(name=>`<span class="tagpill">${name}</span>`).join("")||'<span class="tagpill">—</span>'}</div>
+          </div>
+        </div>
+        <div>
+          <div class="res-block"><h4>EQUIPAMENTO</h4><div class="notes-box">${p.equipment||"—"}</div></div>
+          <div class="res-block"><h4>TRAÇOS &amp; CARACTERÍSTICAS</h4><div class="notes-box">${p.traits||"—"}</div></div>
+          <div class="res-block"><h4>IDENTIDADE / ANOTAÇÕES</h4><div class="notes-box">${p.notes||"—"}</div></div>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById("charSheetWrap").innerHTML = html;
+  document.getElementById("charSheetWrap").scrollIntoView({behavior:"smooth", block:"start"});
+}
+function deleteChar(id){
+  if(!confirm("Remover este personagem? Essa ação não pode ser desfeita.")) return;
+  DATA.characters = DATA.characters.filter(x=>x.id!==id);
+  currentCharId=null;
+  persist(); renderPersonagens();
+  showToast("Personagem removido.");
+}
+
+/* =====================================================================
+   UTILITÁRIOS COMUNS
+   ===================================================================== */
+function emptyState(msg, addFnCall){
+  return `<div class="empty-state" style="grid-column:1/-1;">${msg}<br><button class="btn btn-primary" onclick="${addFnCall}">+ Adicionar</button></div>`;
+}
+function deleteEntity(collection, id, label){
+  if(!confirm(`Remover ${label==="item"?"este":"esta"} ${label}? Essa ação não pode ser desfeita.`)) return;
+  DATA[collection] = DATA[collection].filter(x=>x.id!==id);
+  persist();
+  const renderers = {races:renderRacas, classes:renderClasses, spells:renderSpells, techniques:renderTechs, items:renderItems};
+  if(collection==="classes"){ populateClassSelects(); }
+  renderers[collection]();
+  showToast(label.charAt(0).toUpperCase()+label.slice(1)+" removida.");
+}
+function updateStats(){
+  document.getElementById("statRacas").textContent = DATA.races.length;
+  document.getElementById("statClasses").textContent = DATA.classes.length;
+  document.getElementById("statMagias").textContent = DATA.spells.length;
+  document.getElementById("statTecnicas").textContent = DATA.techniques.length;
+  document.getElementById("statItens").textContent = DATA.items.length;
+  document.getElementById("statPersonagens").textContent = DATA.characters.length;
+}
+
+/* =====================================================================
+   MECÂNICAS (render estático)
+   ===================================================================== */
+function renderMechanics(){
+  const wrap = document.getElementById("mecanicasGrid");
+  wrap.innerHTML = MECHANICS.map(m=>`
+    <div class="ref-card">
+      <h3>${m.title}</h3>
+      ${m.body?`<p>${m.body}</p>`:""}
+      ${m.table?`<table><tbody>${m.table.map(row=>`<tr><td class="k">${row[0]}</td><td>${row[1]}</td></tr>`).join("")}</tbody></table>`:""}
+    </div>`).join("");
+}
+
+/* =====================================================================
+   EXPORTAR / IMPORTAR / RESET
+   ===================================================================== */
+document.getElementById("btnExport").addEventListener("click",()=>{
+  const blob = new Blob([JSON.stringify(DATA, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "brisa-e-lamentacoes-dados.json"; a.click();
+  URL.revokeObjectURL(url);
+  showToast("Dados exportados.");
+});
+document.getElementById("btnImport").addEventListener("click",()=>document.getElementById("importFile").click());
+document.getElementById("importFile").addEventListener("change",(e)=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const parsed = JSON.parse(reader.result);
+      DATA = Object.assign(structuredCloneSafe(DEFAULT_DATA), parsed);
+      persist(); renderAll();
+      showToast("Dados importados com sucesso.");
+    }catch(err){ alert("Arquivo inválido: "+err.message); }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+});
+document.getElementById("btnReset").addEventListener("click",()=>{
+  if(!confirm("Isso vai apagar tudo que você editou/adicionou e restaurar o conteúdo original do livro. Personagens criados também serão perdidos. Continuar?")) return;
+  DATA = structuredCloneSafe(DEFAULT_DATA);
+  persist(); renderAll();
+  showToast("Restaurado ao conteúdo original.");
+});
+
+/* =====================================================================
+   INIT
+   ===================================================================== */
+function renderAll(){
+  populateClassSelects();
+  renderMechanics();
+  renderRacas();
+  renderClasses();
+  renderSpells();
+  renderTechs();
+  renderItems();
+  renderParticularidades();
+  renderReacoes();
+  renderPersonagens();
+  updateStats();
+}
+renderAll();
+</script>
+</body>
+</html>
