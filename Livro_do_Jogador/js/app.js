@@ -1,51 +1,208 @@
 /* =====================================================================
    Brisa e Lamentações - Livro do Jogador
    Módulo: js/app.js
-   Lógica da aplicação: estado, persistência, navegação, CRUD e fichas.
-   Depende de: js/data.js (carregado antes).
-   Funções exportadas globalmente para uso em atributos onclick.
+   Lógica da aplicação.
+
+   ARQUITETURA:
+   - Mecânicas (raças, classes, magias, técnicas, itens, particularidades,
+     mecânicas de regra e reações): carregadas do SERVIDOR via game-data.json
+     (github.io raw), com cache local para servir com rapidez e funcionar offline.
+   - Personagens: salvos LOCALMENTE no navegador/celular de cada jogador
+     (chave bel_personagens). São do jogador, nunca sobrescritos pelas mecânicas.
+
+   NOTA sobre versionamento das mecânicas:
+   - O campo version em game-data.json identifica a versão das regras base.
+   - 'mecBaseline' guarda a versão das mecânicas ativas no momento; ao detectar
+     mudança, revalida se os personagens locais continuam coerentes.
+
+   Funções são expostas globalmente para uso em atributos onclick.
    ===================================================================== */
 
 /* =====================================================================
-   ESTADO / PERSISTÊNCIA
+   CONFIG
    ===================================================================== */
-const STORAGE_KEY = "bel_livro_jogador_v1";
-let DATA = loadData();
+// URLs dos dados de mecânica. Em GitHub Pages o raw aponta para o branch main.
+const GAME_DATA_URL = "game-data.json";              // relativo (mesma origem do app)
+const GAME_DATA_FALLBACK_URL = "https://raw.githubusercontent.com/ildevdio/Brisa-Lamentaacoes/main/game-data.json";
 
-function loadData(){
+const CACHE_MECH_KEY = "bel_mecanicas_cache_v1";     // espelho das mecânicas baixadas
+const CHARS_KEY      = "bel_personagens_v1";         // personagens do jogador (LOCAL)
+
+/* =====================================================================
+   ESTADO
+   ===================================================================== */
+// MECÂNICAS ativas (carregadas do servidor; em memória e cacheadas)
+let MECH = null;                 // { data, mechanics, reactions, version, metadata }
+let MECH_READY = false;          // true quando as mecânicas já foram aplicadas
+
+// PERSONAGENS locais do jogador (sempre do localStorage)
+let PCS = loadPcs();
+
+function loadPcs(){
   try{
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(CHARS_KEY);
     if(raw){
-      const parsed = JSON.parse(raw);
-      // garante que todas as coleções existem mesmo se o backup for parcial
-      return Object.assign(structuredCloneSafe(DEFAULT_DATA), parsed);
+      const arr = JSON.parse(raw);
+      if(Array.isArray(arr)) return arr;
     }
-  }catch(e){ console.warn("Falha ao carregar dados salvos, usando padrão.", e); }
-  return structuredCloneSafe(DEFAULT_DATA);
+  }catch(e){ console.warn("Falha ao ler personagens locais.", e); }
+  return [];
 }
-function structuredCloneSafe(obj){ return JSON.parse(JSON.stringify(obj)); }
-function persist(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA)); }
-function uid(prefix){ return prefix + "_" + Math.random().toString(36).slice(2,9); }
+function savePcs(){ localStorage.setItem(CHARS_KEY, JSON.stringify(PCS)); }
 
+function uid(prefix){ return prefix + "_" + Math.random().toString(36).slice(2,9); }
+function structuredCloneSafe(obj){ return JSON.parse(JSON.stringify(obj)); }
+
+/* =====================================================================
+   TOAST
+   ===================================================================== */
+let __toastTimer = null;
 function showToast(msg){
   const t = document.getElementById("toast");
   t.textContent = msg;
   t.classList.add("show");
-  clearTimeout(window.__toastTimer);
-  window.__toastTimer = setTimeout(()=>t.classList.remove("show"), 2200);
+  clearTimeout(__toastTimer);
+  __toastTimer = setTimeout(()=>t.classList.remove("show"), 2200);
 }
+
+/* =====================================================================
+   CARREGAMENTO DAS MECÂNICAS DO SERVIDOR
+   ===================================================================== */
+async function boot(){
+  const status = document.createElement("div");
+  status.id = "bootStatus";
+  status.style.cssText = "position:fixed;top:10px;right:10px;z-index:300;font-size:12px;border-radius:8px;padding:8px 12px;border:1px solid var(--border);background:var(--panel);color:var(--text-dim);max-width:260px;";
+  document.body.appendChild(status);
+  const setStatus = (txt)=>status.textContent = txt;
+  setStatus("Carregando mecânicas...");
+  try{
+    const loaded = await loadMechanics();
+    if(loaded){ setStatus("Mecânicas atualizadas ✓"); applyAll(); }
+    else throw new Error("falha ao carregar mecânicas");
+  }catch(err){
+    const fallback = tryCache();
+    if(fallback){ setStatus("Modo offline (versão em cache)"); applyAll(); }
+    else {
+      setStatus("Erro ao carregar mecânicas");
+      showToast("Não foi possível carregar as mecânicas do servidor.");
+    }
+  }
+  // mesmo sem mecânicas, renderiza as telas a partir do estado existente
+  applyAll();
+}
+
+function tryCache(){
+  try{
+    const raw = localStorage.getItem(CACHE_MECH_KEY);
+    if(raw){ const o = JSON.parse(raw); if(o && o.data) return normalizeMechanics(o); }
+  }catch(e){ console.warn("cache inválido", e); }
+  return null;
+}
+
+async function loadMechanics(){
+  const urls = await resolveUrls();
+  let parsed = null;
+  for(const url of urls){
+    try{
+      const res = await fetch(url, { cache: "no-store" });
+      if(!res.ok) continue;
+      parsed = await res.json();
+      break;
+    }catch(e){ continue; }
+  }
+  if(!parsed) return false;
+  const norm = normalizeMechanics(parsed);
+  persistCache(norm);
+  return true;
+}
+
+async function resolveUrls(){
+  const urls = [GAME_DATA_URL];
+  // evita usar o raw do github quando já estamos servidos de lá (evita loop/duplicado)
+  if(location.protocol.startsWith("http") && location.hostname && location.hostname !== "raw.githubusercontent.com"){
+    urls.push(GAME_DATA_FALLBACK_URL);
+  }
+  return urls;
+}
+
+function normalizeMechanics(o){
+  const data = o.data || o;
+  if(!(data && (data.races||data.classes||data.spells))){
+    throw new Error("game-data.json inválido: falta campo data");
+  }
+  return {
+    version: o.version || "0.0.0",
+    metadata: o.metadata || {},
+    data: data,
+    mechanics: o.mechanics || [],
+    reactions: o.reactions || []
+  };
+}
+
+function persistCache(norm){
+  try{ localStorage.setItem(CACHE_MECH_KEY, JSON.stringify(norm)); }
+  catch(e){ console.warn("Não foi possível salvar cache de mecânicas.", e); }
+}
+
+// aplica as mecânicas ao estado global usado pelos renderers
+function applyMechanics(norm){
+  MECH = norm;
+  MECH_READY = true;
+}
+
+function applyAll(){
+  applyMechanics(MECH || tryCache());
+  setupEventHandlers();
+  renderAll();
+}
+
+/* =====================================================================
+   CONVENIÊNCIAS DE ACESSO ÀS MECÂNICAS
+   ===================================================================== */
+function mechData(){ return (MECH && MECH.data) ? MECH.data : { races:[], classes:[], spells:[], techniques:[], items:[], particularities:[] }; }
+function mechRaces(){ return mechData().races||[]; }
+function mechClasses(){ return mechData().classes||[]; }
+function mechSpells(){ return mechData().spells||[]; }
+function mechTechs(){ return mechData().techniques||[]; }
+function mechItems(){ return mechData().items||[]; }
+function mechParticularities(){ return mechData().particularities||[]; }
+function mechStats(){ return (MECH && MECH.mechanics)||[]; }
+function mechReactions(){ return (MECH && MECH.reactions)||[]; }
 
 /* =====================================================================
    NAVEGAÇÃO POR ABAS
    ===================================================================== */
-document.getElementById("tabNav").addEventListener("click",(e)=>{
-  const btn = e.target.closest(".tab-btn");
-  if(!btn) return;
-  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
-  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
-  document.getElementById("tab-"+btn.dataset.tab).classList.add("active");
-});
+function setupEventHandlers(){
+  if(setupEventHandlers.__done) return;
+  setupEventHandlers.__done = true;
+
+  document.getElementById("tabNav").addEventListener("click",(e)=>{
+    const btn = e.target.closest(".tab-btn");
+    if(!btn) return;
+    document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+    document.getElementById("tab-"+btn.dataset.tab).classList.add("active");
+  });
+
+  document.getElementById("modalOverlay").addEventListener("click",(e)=>{ if(e.target.id==="modalOverlay") closeModal(); });
+  document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeModal(); });
+
+  document.getElementById("filterClassType").addEventListener("click",(e)=>{
+    const c = e.target.closest(".chip"); if(!c) return;
+    document.querySelectorAll("#filterClassType .chip").forEach(x=>x.classList.remove("active"));
+    c.classList.add("active"); classTypeFilter = c.dataset.val; renderClasses();
+  });
+  document.getElementById("filterItemCat").addEventListener("click",(e)=>{
+    const c = e.target.closest(".chip"); if(!c) return;
+    document.querySelectorAll("#filterItemCat .chip").forEach(x=>x.classList.remove("active"));
+    c.classList.add("active"); itemCatFilter = c.dataset.val; renderItems();
+  });
+  document.getElementById("btnExport").addEventListener("click",exportPcs);
+  document.getElementById("btnImport").addEventListener("click",()=>document.getElementById("importFile").click());
+  document.getElementById("importFile").addEventListener("change",importPcsFile);
+  document.getElementById("btnReset").addEventListener("click",resetPcs);
+}
 
 /* =====================================================================
    MODAL genérico
@@ -68,8 +225,6 @@ function openModal(title, bodyHtml, onSubmit){
   });
 }
 function closeModal(){ document.getElementById("modalOverlay").classList.add("hidden"); }
-document.getElementById("modalOverlay").addEventListener("click",(e)=>{ if(e.target.id==="modalOverlay") closeModal(); });
-document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeModal(); });
 
 function field(label, name, value, opts={}){
   const full = opts.full ? "full" : "";
@@ -86,7 +241,6 @@ function field(label, name, value, opts={}){
 }
 function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 function parseLines(text){
-  // "Nome: Descrição" por linha -> [{name,desc}]
   return String(text||"").split("\n").map(l=>l.trim()).filter(Boolean).map(l=>{
     const idx = l.indexOf(":");
     if(idx===-1) return {name:l, desc:""};
@@ -96,69 +250,33 @@ function parseLines(text){
 function traitsToLines(traits){ return (traits||[]).map(t=>`${t.name}: ${t.desc}`).join("\n"); }
 
 /* =====================================================================
-   RAÇAS
+   RAÇAS (somente leitura - mecânicas vêm do servidor)
    ===================================================================== */
 function renderRacas(){
   const q = (document.getElementById("searchRacas").value||"").toLowerCase();
   const wrap = document.getElementById("gridRacas");
-  const list = DATA.races.filter(r=>r.name.toLowerCase().includes(q) || (r.identity||"").toLowerCase().includes(q));
-  if(list.length===0){ wrap.innerHTML = emptyState("Nenhuma raça encontrada.", "openRaceForm()"); updateStats(); return; }
+  const list = mechRaces().filter(r=>r.name.toLowerCase().includes(q) || (r.identity||"").toLowerCase().includes(q));
+  if(list.length===0){ wrap.innerHTML = emptyState("Nenhuma raça encontrada."); updateStats(); return; }
   wrap.innerHTML = list.map(r=>`
     <div class="card">
-      <div class="card-top">
-        <div class="card-title">${r.name}</div>
-        <div class="card-tag ${r.custom?"tag-custom":""}">${r.custom?"Personalizada":"Base"}</div>
-      </div>
+      <div class="card-top"><div class="card-title">${r.name}</div><div class="card-tag">Raça</div></div>
       <div class="card-meta"><span>Bônus: <b>${r.bonus||"—"}</b></span></div>
       <div class="card-body">${r.identity||""}${r.appearance?`<br><span style="color:var(--text-faint)">${r.appearance}</span>`:""}</div>
       <ul class="trait-list">${(r.traits||[]).map(t=>`<li><b>${t.name}</b>${t.desc?": "+t.desc:""}</li>`).join("")}</ul>
-      <div class="card-foot">
-        <button class="btn btn-sm" onclick="openRaceForm('${r.id}')">Editar</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteEntity('races','${r.id}','raça')">Remover</button>
-      </div>
     </div>`).join("");
   updateStats();
 }
-function openRaceForm(id){
-  const r = id ? DATA.races.find(x=>x.id===id) : null;
-  const body = `<div class="form-grid">
-    ${field("Nome","name",r?.name,{required:true})}
-    ${field("Bônus Simples","bonus",r?.bonus)}
-    ${field("Aparência / expectativa de vida","appearance",r?.appearance,{full:true})}
-    ${field("Identidade","identity",r?.identity,{textarea:true,full:true})}
-    ${field("Traços Marcantes","traits",traitsToLines(r?.traits),{textarea:true,full:true,hint:"Um traço por linha, no formato: Nome: Descrição"})}
-  </div>`;
-  openModal(id?"Editar raça":"Nova raça", body, (fd)=>{
-    const obj = {
-      id: id || uid("r"),
-      name: fd.get("name").trim(),
-      bonus: fd.get("bonus").trim(),
-      appearance: fd.get("appearance").trim(),
-      identity: fd.get("identity").trim(),
-      traits: parseLines(fd.get("traits")),
-      custom: id ? (r?.custom||false) : true
-    };
-    if(id){ const i = DATA.races.findIndex(x=>x.id===id); DATA.races[i]=obj; }
-    else DATA.races.push(obj);
-    persist(); closeModal(); renderRacas(); showToast(id?"Raça atualizada.":"Raça criada.");
-  });
-}
 
 /* =====================================================================
-   CLASSES
+   CLASSES (somente leitura)
    ===================================================================== */
 let classTypeFilter = "";
-document.getElementById("filterClassType").addEventListener("click",(e)=>{
-  const c = e.target.closest(".chip"); if(!c) return;
-  document.querySelectorAll("#filterClassType .chip").forEach(x=>x.classList.remove("active"));
-  c.classList.add("active"); classTypeFilter = c.dataset.val; renderClasses();
-});
 function renderClasses(){
   const q = (document.getElementById("searchClasses").value||"").toLowerCase();
   const wrap = document.getElementById("gridClasses");
-  let list = DATA.classes.filter(c=>c.name.toLowerCase().includes(q));
+  let list = mechClasses().filter(c=>c.name.toLowerCase().includes(q));
   if(classTypeFilter) list = list.filter(c=>c.type===classTypeFilter);
-  if(list.length===0){ wrap.innerHTML = emptyState("Nenhuma classe encontrada.", "openClassForm()"); updateStats(); return; }
+  if(list.length===0){ wrap.innerHTML = emptyState("Nenhuma classe encontrada."); updateStats(); return; }
   wrap.innerHTML = list.map(c=>`
     <div class="card">
       <div class="card-top">
@@ -173,75 +291,28 @@ function renderClasses(){
         ${c.impulse?`<li><b>Impulso - ${c.impulse.name}</b>: ${c.impulse.desc}</li>`:""}
         ${(c.paths||[]).map(p=>`<li><b>Caminho: ${p.name}</b> (${p.focus||""}) - ${p.areas||""}</li>`).join("")}
       </ul>
-      <div class="card-foot">
-        <button class="btn btn-sm" onclick="openClassForm('${c.id}')">Editar</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteEntity('classes','${c.id}','classe')">Remover</button>
-      </div>
     </div>`).join("");
   updateStats();
 }
-function featuresToLines(list){ return (list||[]).map(f=>`${f.name}: ${f.desc}`).join("\n"); }
-function pathsToLines(list){ return (list||[]).map(p=>`${p.name} | ${p.focus} | ${p.areas}`).join("\n"); }
-function parsePaths(text){
-  return String(text||"").split("\n").map(l=>l.trim()).filter(Boolean).map(l=>{
-    const parts = l.split("|").map(x=>x.trim());
-    return {name:parts[0]||"", focus:parts[1]||"", areas:parts[2]||""};
-  });
-}
-function openClassForm(id){
-  const c = id ? DATA.classes.find(x=>x.id===id) : null;
-  const body = `<div class="form-grid">
-    ${field("Nome","name",c?.name,{required:true})}
-    ${field("Tipo","type",c?.type||"Física",{select:["Física","Mágica"]})}
-    ${field("Recurso principal","resource",c?.resource||"Prana",{select:["Prana","Mana"]})}
-    ${field("Máximo do recurso","resourceMax",c?.resourceMax,{number:true})}
-    ${field("Lucidez máxima inicial","lucidityMax",c?.lucidityMax||80,{number:true})}
-    ${field("Atributos predominantes","attrs",c?.attrs,{full:true})}
-    ${field("Identidade","identity",c?.identity,{textarea:true,full:true})}
-    ${field("Características de Classe","features",featuresToLines(c?.features),{textarea:true,full:true,hint:"Uma por linha: Nome: Descrição"})}
-    ${field("Impulso (nome)","impulseName",c?.impulse?.name)}
-    ${field("Impulso (efeito)","impulseDesc",c?.impulse?.desc)}
-    ${field("Caminhos","paths",pathsToLines(c?.paths),{textarea:true,full:true,hint:"Um por linha: Nome do Caminho | Foco | Áreas da árvore (separadas por vírgula)"})}
-  </div>`;
-  openModal(id?"Editar classe":"Nova classe", body, (fd)=>{
-    const obj = {
-      id: id || uid("c"),
-      name: fd.get("name").trim(),
-      type: fd.get("type"),
-      resource: fd.get("resource"),
-      resourceMax: Number(fd.get("resourceMax"))||0,
-      lucidityMax: Number(fd.get("lucidityMax"))||80,
-      attrs: fd.get("attrs").trim(),
-      identity: fd.get("identity").trim(),
-      features: parseLines(fd.get("features")),
-      impulse: { name: fd.get("impulseName").trim(), desc: fd.get("impulseDesc").trim() },
-      paths: parsePaths(fd.get("paths")),
-      custom: id ? (c?.custom||false) : true
-    };
-    if(id){ const i = DATA.classes.findIndex(x=>x.id===id); DATA.classes[i]=obj; }
-    else DATA.classes.push(obj);
-    persist(); closeModal(); renderClasses(); populateClassSelects(); renderCharForms&&null; showToast(id?"Classe atualizada.":"Classe criada.");
-  });
-}
 
 /* =====================================================================
-   MAGIAS
+   MAGIAS (somente leitura)
    ===================================================================== */
 function populateClassSelects(){
-  const classNames = DATA.classes.filter(c=>c.type==="Mágica").map(c=>c.name);
-  const allClassNames = DATA.classes.map(c=>c.name);
   const selMagia = document.getElementById("filterMagiaClasse");
-  selMagia.innerHTML = `<option value="">Todas as classes</option>` + [...new Set([...classNames, ...DATA.spells.map(s=>s.class)])].map(n=>`<option value="${n}">${n}</option>`).join("");
+  const mNames = mechClasses().filter(c=>c.type==="Mágica").map(c=>c.name);
+  selMagia.innerHTML = `<option value="">Todas as classes</option>` + [...new Set([...mNames, ...mechSpells().map(s=>s.class)])].map(n=>`<option value="${n}">${n}</option>`).join("");
   const selTec = document.getElementById("filterTecClasse");
-  selTec.innerHTML = `<option value="">Todas as classes</option>` + [...new Set([...DATA.classes.filter(c=>c.type==="Física").map(c=>c.name), ...DATA.techniques.map(t=>t.class)])].map(n=>`<option value="${n}">${n}</option>`).join("");
+  const fNames = mechClasses().filter(c=>c.type==="Física").map(c=>c.name);
+  selTec.innerHTML = `<option value="">Todas as classes</option>` + [...new Set([...fNames, ...mechTechs().map(t=>t.class)])].map(n=>`<option value="${n}">${n}</option>`).join("");
 }
 function renderSpells(){
   const q = (document.getElementById("searchMagias").value||"").toLowerCase();
   const cls = document.getElementById("filterMagiaClasse").value;
   const wrap = document.getElementById("gridMagias");
-  let list = DATA.spells.filter(s=>s.name.toLowerCase().includes(q));
+  let list = mechSpells().filter(s=>s.name.toLowerCase().includes(q));
   if(cls) list = list.filter(s=>s.class===cls);
-  if(list.length===0){ wrap.innerHTML = emptyState("Nenhuma magia encontrada.", "openSpellForm()"); updateStats(); return; }
+  if(list.length===0){ wrap.innerHTML = emptyState("Nenhuma magia encontrada."); updateStats(); return; }
   wrap.innerHTML = list.map(s=>`
     <div class="card">
       <div class="card-top"><div class="card-title">${s.name}</div><div class="card-tag tag-magica">Círculo ${s.circle}</div></div>
@@ -249,103 +320,40 @@ function renderSpells(){
       <div class="card-meta"><span>Custo: <b>${s.mana} Mana</b></span><span>Atributo: <b>${s.attr}</b></span><span>Alcance: <b>${s.range}</b></span></div>
       ${s.damage?`<div class="card-meta"><span>Dano: <b>${s.damage}</b></span></div>`:""}
       <div class="card-body">${s.effect||""}</div>
-      <div class="card-foot">
-        <button class="btn btn-sm" onclick="openSpellForm('${s.id}')">Editar</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteEntity('spells','${s.id}','magia')">Remover</button>
-      </div>
     </div>`).join("");
   updateStats();
 }
-function openSpellForm(id){
-  const s = id ? DATA.spells.find(x=>x.id===id) : null;
-  const classOptions = DATA.classes.map(c=>c.name);
-  const body = `<div class="form-grid">
-    ${field("Nome","name",s?.name,{required:true})}
-    ${field("Classe","class",s?.class||classOptions[0],{select:classOptions})}
-    ${field("Círculo (1-7)","circle",s?.circle||1,{number:true})}
-    ${field("Nível mínimo","levelMin",s?.levelMin||1,{number:true})}
-    ${field("Custo de Mana","mana",s?.mana||10,{number:true})}
-    ${field("Atributo","attr",s?.attr)}
-    ${field("Alcance","range",s?.range||"Perto",{select:["Melee","Muito Perto","Perto","Longe","Muito Longe"]})}
-    ${field("Dano (opcional)","damage",s?.damage)}
-    ${field("Efeito","effect",s?.effect,{textarea:true,full:true})}
-  </div>`;
-  openModal(id?"Editar magia":"Nova magia", body, (fd)=>{
-    const obj = {
-      id: id||uid("s"), name: fd.get("name").trim(), class: fd.get("class"),
-      circle: Number(fd.get("circle"))||1, levelMin: Number(fd.get("levelMin"))||1,
-      mana: Number(fd.get("mana"))||0, attr: fd.get("attr").trim(),
-      range: fd.get("range"), damage: fd.get("damage").trim(), effect: fd.get("effect").trim()
-    };
-    if(id){ const i=DATA.spells.findIndex(x=>x.id===id); DATA.spells[i]=obj; } else DATA.spells.push(obj);
-    persist(); closeModal(); populateClassSelects(); renderSpells(); showToast(id?"Magia atualizada.":"Magia criada.");
-  });
-}
 
 /* =====================================================================
-   TÉCNICAS
+   TÉCNICAS (somente leitura)
    ===================================================================== */
 function renderTechs(){
   const q = (document.getElementById("searchTecnicas").value||"").toLowerCase();
   const cls = document.getElementById("filterTecClasse").value;
   const wrap = document.getElementById("gridTecnicas");
-  let list = DATA.techniques.filter(t=>t.name.toLowerCase().includes(q));
+  let list = mechTechs().filter(t=>t.name.toLowerCase().includes(q));
   if(cls) list = list.filter(t=>t.class===cls);
-  if(list.length===0){ wrap.innerHTML = emptyState("Nenhuma técnica encontrada.", "openTechForm()"); updateStats(); return; }
+  if(list.length===0){ wrap.innerHTML = emptyState("Nenhuma técnica encontrada."); updateStats(); return; }
   wrap.innerHTML = list.map(t=>`
     <div class="card">
       <div class="card-top"><div class="card-title">${t.name}</div><div class="card-tag tag-fisica">Grau ${t.grade}</div></div>
       <div class="card-meta"><span>Classe: <b>${t.class}</b></span><span>Nv. mín.: <b>${t.levelMin}</b></span></div>
       <div class="card-meta"><span>Custo: <b>${t.prana} Prana</b></span><span>Atributo: <b>${t.attr}</b></span><span>Tipo: <b>${t.type}</b></span></div>
       <div class="card-body">${t.effect||""}${t.tool?`<br><span style="color:var(--text-faint)">${t.tool}</span>`:""}</div>
-      <div class="card-foot">
-        <button class="btn btn-sm" onclick="openTechForm('${t.id}')">Editar</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteEntity('techniques','${t.id}','técnica')">Remover</button>
-      </div>
     </div>`).join("");
   updateStats();
 }
-function openTechForm(id){
-  const t = id ? DATA.techniques.find(x=>x.id===id) : null;
-  const classOptions = DATA.classes.map(c=>c.name);
-  const body = `<div class="form-grid">
-    ${field("Nome","name",t?.name,{required:true})}
-    ${field("Classe","class",t?.class||classOptions[0],{select:classOptions})}
-    ${field("Grau (1-7)","grade",t?.grade||1,{number:true})}
-    ${field("Nível mínimo","levelMin",t?.levelMin||1,{number:true})}
-    ${field("Custo de Prana","prana",t?.prana||5,{number:true})}
-    ${field("Atributo","attr",t?.attr)}
-    ${field("Tipo","type",t?.type||"Impacto",{select:["Impacto","Sequência","Defesa","Mobilidade","Resistência","Precisão","Utilidade"]})}
-    ${field("Efeito","effect",t?.effect,{textarea:true,full:true})}
-    ${field("Ferramenta recomendada","tool",t?.tool,{textarea:true,full:true})}
-  </div>`;
-  openModal(id?"Editar técnica":"Nova técnica", body, (fd)=>{
-    const obj = {
-      id: id||uid("t"), name: fd.get("name").trim(), class: fd.get("class"),
-      grade: Number(fd.get("grade"))||1, levelMin: Number(fd.get("levelMin"))||1,
-      prana: Number(fd.get("prana"))||0, attr: fd.get("attr").trim(), type: fd.get("type"),
-      effect: fd.get("effect").trim(), tool: fd.get("tool").trim()
-    };
-    if(id){ const i=DATA.techniques.findIndex(x=>x.id===id); DATA.techniques[i]=obj; } else DATA.techniques.push(obj);
-    persist(); closeModal(); populateClassSelects(); renderTechs(); showToast(id?"Técnica atualizada.":"Técnica criada.");
-  });
-}
 
 /* =====================================================================
-   ITENS / EQUIPAMENTOS
+   ITENS / EQUIPAMENTOS (somente leitura)
    ===================================================================== */
 let itemCatFilter = "";
-document.getElementById("filterItemCat").addEventListener("click",(e)=>{
-  const c = e.target.closest(".chip"); if(!c) return;
-  document.querySelectorAll("#filterItemCat .chip").forEach(x=>x.classList.remove("active"));
-  c.classList.add("active"); itemCatFilter = c.dataset.val; renderItems();
-});
 function renderItems(){
   const q = (document.getElementById("searchItens").value||"").toLowerCase();
   const wrap = document.getElementById("gridItens");
-  let list = DATA.items.filter(i=>i.name.toLowerCase().includes(q));
+  let list = mechItems().filter(i=>i.name.toLowerCase().includes(q));
   if(itemCatFilter) list = list.filter(i=>i.category===itemCatFilter);
-  if(list.length===0){ wrap.innerHTML = emptyState("Nenhum item encontrado.", "openItemForm()"); updateStats(); return; }
+  if(list.length===0){ wrap.innerHTML = emptyState("Nenhum item encontrado."); updateStats(); return; }
   wrap.innerHTML = list.map(i=>`
     <div class="card">
       <div class="card-top"><div class="card-title">${i.name}</div><div class="card-tag">Tier ${i.tier}</div></div>
@@ -355,91 +363,36 @@ function renderItems(){
       </div>
       ${i.damage?`<div class="card-meta"><span>Dano: <b>${i.damage} ${i.dtype||""}</b></span>${i.burden?`<span>Burden: <b>${i.burden}</b></span>`:""}</div>`:""}
       <div class="card-body">${i.desc||""}${i.feature?`<br><b style="color:var(--text)">Feature:</b> ${i.feature}`:""}</div>
-      <div class="card-foot">
-        <button class="btn btn-sm" onclick="openItemForm('${i.id}')">Editar</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteEntity('items','${i.id}','item')">Remover</button>
-      </div>
     </div>`).join("");
   updateStats();
 }
-function openItemForm(id){
-  const i = id ? DATA.items.find(x=>x.id===id) : null;
-  const body = `<div class="form-grid">
-    ${field("Nome","name",i?.name,{required:true})}
-    ${field("Categoria","category",i?.category||"Arma",{select:["Arma","Armadura","Ferramenta Mágica","Item Mágico","Consumível"]})}
-    ${field("Tier (1-7)","tier",i?.tier||1,{number:true})}
-    ${field("Traço/Atributo","attr",i?.attr)}
-    ${field("Alcance","range",i?.range||"",{select:["","Melee","Muito Perto","Perto","Longe","Muito Longe"]})}
-    ${field("Dado de Dano","damage",i?.damage)}
-    ${field("Tipo de Dano","dtype",i?.dtype||"",{select:["","PHY","MAG"]})}
-    ${field("Burden (mãos)","burden",i?.burden)}
-    ${field("Feature","feature",i?.feature,{textarea:true,full:true})}
-    ${field("Descrição","desc",i?.desc,{textarea:true,full:true})}
-  </div>`;
-  openModal(id?"Editar item":"Novo item", body, (fd)=>{
-    const obj = {
-      id: id||uid("i"), name: fd.get("name").trim(), category: fd.get("category"),
-      tier: Number(fd.get("tier"))||1, attr: fd.get("attr").trim(), range: fd.get("range"),
-      damage: fd.get("damage").trim(), dtype: fd.get("dtype"), burden: fd.get("burden").trim(),
-      feature: fd.get("feature").trim(), desc: fd.get("desc").trim()
-    };
-    if(id){ const idx=DATA.items.findIndex(x=>x.id===id); DATA.items[idx]=obj; } else DATA.items.push(obj);
-    persist(); closeModal(); renderItems(); showToast(id?"Item atualizado.":"Item criado.");
-  });
-}
 
 /* =====================================================================
-   PARTICULARIDADES
+   PARTICULARIDADES (somente leitura)
    ===================================================================== */
 function particularityField(selected){
   const names = selected || [];
-  const options = (DATA.particularities||[]).map(x=>`<label class="check-option"><input type="checkbox" name="particularities" value="${x.name}" ${names.includes(x.name)?"checked":""}> <span>${x.name}</span></label>`).join("");
-  return `<div class="field full"><label>Particularidades</label><div class="check-grid">${options||'<span class="hint">Nenhuma particularidade cadastrada.</span>'}</div><div class="hint">Você pode selecionar várias. Elas representam características mecânicas do personagem, não apenas bônus de teste.</div></div>`;
+  const options = mechParticularities().map(x=>`<label class="check-option"><input type="checkbox" name="particularities" value="${x.name}" ${names.includes(x.name)?"checked":""}> <span>${x.name}</span></label>`).join("");
+  return `<div class="field full"><label>Particularidades</label><div class="check-grid">${options||'<span class="hint">Nenhuma particularidade cadastrada.</span>'}</div><div class="hint">Você pode selecionar várias. Elas representam características mecânicas do personagem.</div></div>`;
 }
-
 function renderParticularidades(){
   const wrap=document.getElementById("gridParticularidades"); if(!wrap) return;
   const q=(document.getElementById("searchParticularidades")?.value||"").toLowerCase();
-  const list=(DATA.particularities||[]).filter(x=>(x.name+" "+x.category+" "+x.description).toLowerCase().includes(q));
-  if(!list.length){wrap.innerHTML=emptyState("Nenhuma particularidade encontrada.","openParticularidadeForm()");return;}
-  wrap.innerHTML=list.map(x=>`<div class="card"><div class="card-top"><div><h3>${x.name}</h3><div class="sub">${x.category||"Geral"}</div></div><div class="card-actions"><button class="btn btn-sm" onclick="openParticularidadeForm('${x.id}')">Editar</button><button class="btn btn-sm btn-danger" onclick="deleteParticularidade('${x.id}')">Remover</button></div></div><p>${x.description||""}</p><div class="notes-box"><b>Efeito:</b> ${x.effect||"Não definido."}${x.trigger?`<br><br><b>Gatilho:</b> ${x.trigger}`:""}${x.limitation?`<br><br><b>Limitação:</b> ${x.limitation}`:""}${x.hyperfocus?`<br><br><b>Hiperfoco:</b> ${x.hyperfocus}`:""}${x.abstinence?`<br><br><b>Abstinência:</b> ${x.abstinence}`:""}</div></div>`).join("");
-}
-function openParticularidadeForm(id){
-  const p=id?(DATA.particularities||[]).find(x=>x.id===id):null;
-  const body=`<div class="form-grid">
-    ${field("Nome","name",p?.name,{required:true,full:true})}
-    ${field("Categoria","category",p?.category||"Geral")}
-    ${field("Descrição","description",p?.description,{textarea:true,full:true})}
-    ${field("Efeito","effect",p?.effect,{textarea:true,full:true})}
-    ${field("Gatilho","trigger",p?.trigger,{textarea:true,full:true})}
-    ${field("Limitação","limitation",p?.limitation,{textarea:true,full:true})}
-    ${field("Hiperfoco / efeito adicional","hyperfocus",p?.hyperfocus,{textarea:true,full:true})}
-    ${field("Abstinência / consequência adicional","abstinence",p?.abstinence,{textarea:true,full:true})}
-  </div>`;
-  openModal(id?"Editar particularidade":"Nova particularidade",body,fd=>{
-    const obj={id:id||uid("pt"),name:fd.get("name").trim(),category:fd.get("category").trim()||"Geral",description:fd.get("description").trim(),effect:fd.get("effect").trim(),trigger:fd.get("trigger").trim(),limitation:fd.get("limitation").trim(),hyperfocus:fd.get("hyperfocus").trim(),abstinence:fd.get("abstinence").trim()};
-    if(id){const i=DATA.particularities.findIndex(x=>x.id===id);DATA.particularities[i]=obj;}else DATA.particularities.push(obj);
-    persist();closeModal();renderParticularidades();showToast(id?"Particularidade atualizada.":"Particularidade criada.");
-  });
-}
-function deleteParticularidade(id){
-  const p=(DATA.particularities||[]).find(x=>x.id===id); if(!p)return;
-  if(!confirm(`Remover a particularidade "${p.name}"?`))return;
-  DATA.particularities=DATA.particularities.filter(x=>x.id!==id);
-  DATA.characters.forEach(c=>{c.particularities=(c.particularities||[]).filter(x=>x!==p.name);});
-  persist();renderParticularidades();renderPersonagens();showToast("Particularidade removida.");
+  const list=mechParticularities().filter(x=>(x.name+" "+x.category+" "+x.description).toLowerCase().includes(q));
+  if(!list.length){wrap.innerHTML=emptyState("Nenhuma particularidade encontrada.");return;}
+  wrap.innerHTML=list.map(x=>`<div class="card"><div class="card-top"><div><h3>${x.name}</h3><div class="sub">${x.category||"Geral"}</div></div></div><p>${x.description||""}</p><div class="notes-box"><b>Efeito:</b> ${x.effect||"Não definido."}${x.trigger?`<br><br><b>Gatilho:</b> ${x.trigger}`:""}${x.limitation?`<br><br><b>Limitação:</b> ${x.limitation}`:""}${x.hyperfocus?`<br><br><b>Hiperfoco:</b> ${x.hyperfocus}`:""}${x.abstinence?`<br><br><b>Abstinência:</b> ${x.abstinence}`:""}</div></div>`).join("");
 }
 
 /* =====================================================================
-   PERSONAGENS
+   PERSONAGENS (LOCAIS - do jogador)
    ===================================================================== */
 let currentCharId = null;
 
 function renderPersonagens(){
   const wrap = document.getElementById("gridPersonagens");
   document.getElementById("charSheetWrap").innerHTML = "";
-  if(DATA.characters.length===0){ wrap.innerHTML = emptyState("Nenhum personagem criado ainda.", "openCharForm()"); updateStats(); return; }
-  wrap.innerHTML = DATA.characters.map(p=>`
+  if(PCS.length===0){ wrap.innerHTML = emptyState("Nenhum personagem criado ainda.", "openCharForm()"); updateStats(); return; }
+  wrap.innerHTML = PCS.map(p=>`
     <div class="char-card" onclick="viewChar('${p.id}')">
       <h3>${p.name||"Sem nome"}</h3>
       <div class="sub">${p.race||"—"} · ${p.class||"—"} ${p.path?("· "+p.path):""} · Nível ${p.level||1}</div>
@@ -456,9 +409,11 @@ function barRow(label, val, max, cls){
 }
 
 function openCharForm(id){
-  const p = id ? DATA.characters.find(x=>x.id===id) : null;
-  const raceOptions = DATA.races.map(r=>r.name);
-  const classOptions = DATA.classes.map(c=>c.name);
+  const p = id ? PCS.find(x=>x.id===id) : null;
+  const raceOptions = mechRaces().map(r=>r.name);
+  if(!raceOptions.length) raceOptions.push("");
+  const classOptions = mechClasses().map(c=>c.name);
+  if(!classOptions.length) classOptions.push("");
   const body = `<div class="form-grid">
     ${field("Nome do personagem","name",p?.name,{required:true,full:true})}
     ${field("Raça","race",p?.race||raceOptions[0],{select:raceOptions})}
@@ -502,14 +457,14 @@ function openCharForm(id){
       particularities: fd.getAll("particularities"),
       equipment: fd.get("equipment").trim(),
       traits: fd.get("traits").trim(),
-      notes: fd.get("notes").trim()
+      notes: fd.get("notes").trim(),
+      mecBaseline: MECH ? MECH.version : null
     };
-    const cls = DATA.classes.find(c=>c.name===obj.class);
+    const cls = mechClasses().find(c=>c.name===obj.class);
     obj.resourceName = cls?cls.resource:"Recurso";
-    // preenche automaticamente o que ficou vazio
     autofillChar(obj, cls);
-    if(id){ const i=DATA.characters.findIndex(x=>x.id===id); DATA.characters[i]=obj; } else DATA.characters.push(obj);
-    persist(); closeModal(); renderPersonagens();
+    if(id){ const i=PCS.findIndex(x=>x.id===id); PCS[i]=obj; } else PCS.push(obj);
+    savePcs(); closeModal(); renderPersonagens();
     if(id) viewChar(id); else viewChar(obj.id);
     showToast(id?"Personagem atualizado.":"Personagem criado.");
   });
@@ -526,20 +481,21 @@ function autofillChar(obj, cls){
   if(obj.evasao===null) obj.evasao = 10 + (Number(obj.attributes.agilidade)||0);
 }
 function recalcChar(id){
-  const p = DATA.characters.find(x=>x.id===id); if(!p) return;
-  const cls = DATA.classes.find(c=>c.name===p.class);
+  const p = PCS.find(x=>x.id===id); if(!p) return;
+  const cls = mechClasses().find(c=>c.name===p.class);
   const isPhysical = cls ? cls.type==="Física" : true;
   p.vidaMax = isPhysical?7:6; p.vida = Math.min(p.vida??p.vidaMax, p.vidaMax);
   p.recursoMax = cls?cls.resourceMax:20; p.recurso = p.recursoMax;
   p.lucidezMax = cls?cls.lucidityMax:(isPhysical?80:100); p.lucidez = p.lucidezMax;
   p.evasao = 10 + (Number(p.attributes.agilidade)||0);
   p.resourceName = cls?cls.resource:"Recurso";
-  persist(); viewChar(id); renderPersonagens(); showToast("Recursos recalculados a partir da Classe.");
+  p.mecBaseline = MECH ? MECH.version : p.mecBaseline;
+  savePcs(); viewChar(id); renderPersonagens(); showToast("Recursos recalculados a partir da Classe.");
 }
 
 function viewChar(id){
   currentCharId = id;
-  const p = DATA.characters.find(x=>x.id===id); if(!p) return;
+  const p = PCS.find(x=>x.id===id); if(!p) return;
   const a = p.attributes||{};
   const attrDisplay = (label,val)=>`<div class="attr-box"><div class="name">${label}</div><div class="val ${val>0?'pos':(val<0?'neg':'')}">${val>=0?"+":""}${val}</div></div>`;
   const html = `
@@ -567,7 +523,7 @@ function viewChar(id){
             ${barRow("Vida", p.vida, p.vidaMax, "vida")}
             ${barRow(p.resourceName||"Recurso", p.recurso, p.recursoMax, "recurso")}
             ${barRow("Lucidez", p.lucidez, p.lucidezMax, "lucidez")}
-            <div class="tag-row"><span class="tagpill">Evasão ${p.evasao}</span></div>
+            <div class="tag-row"><span class="tagpill">Evasão ${p.evasao}</span> ${(MECH&&p.mecBaseline!==MECH.version)?'<span class="tagpill" style="border-color:var(--hope-dim);color:var(--hope)">⚑ Novas regras disponíveis</span>':''}</div>
           </div>
           <div class="res-block"><h4>EXPERIENCES</h4>
             <div class="tag-row">${(p.experiences||[]).map(e=>`<span class="tagpill">${e}</span>`).join("")||'<span class="tagpill">—</span>'}</div>
@@ -588,9 +544,9 @@ function viewChar(id){
 }
 function deleteChar(id){
   if(!confirm("Remover este personagem? Essa ação não pode ser desfeita.")) return;
-  DATA.characters = DATA.characters.filter(x=>x.id!==id);
+  PCS = PCS.filter(x=>x.id!==id);
   currentCharId=null;
-  persist(); renderPersonagens();
+  savePcs(); renderPersonagens();
   showToast("Personagem removido.");
 }
 
@@ -598,32 +554,26 @@ function deleteChar(id){
    UTILITÁRIOS COMUNS
    ===================================================================== */
 function emptyState(msg, addFnCall){
-  return `<div class="empty-state" style="grid-column:1/-1;">${msg}<br><button class="btn btn-primary" onclick="${addFnCall}">+ Adicionar</button></div>`;
-}
-function deleteEntity(collection, id, label){
-  if(!confirm(`Remover ${label==="item"?"este":"esta"} ${label}? Essa ação não pode ser desfeita.`)) return;
-  DATA[collection] = DATA[collection].filter(x=>x.id!==id);
-  persist();
-  const renderers = {races:renderRacas, classes:renderClasses, spells:renderSpells, techniques:renderTechs, items:renderItems};
-  if(collection==="classes"){ populateClassSelects(); }
-  renderers[collection]();
-  showToast(label.charAt(0).toUpperCase()+label.slice(1)+" removida.");
+  const btn = addFnCall ? `<br><button class="btn btn-primary" onclick="${addFnCall}">+ Adicionar</button>` : "";
+  return `<div class="empty-state" style="grid-column:1/-1;">${msg}${btn}</div>`;
 }
 function updateStats(){
-  document.getElementById("statRacas").textContent = DATA.races.length;
-  document.getElementById("statClasses").textContent = DATA.classes.length;
-  document.getElementById("statMagias").textContent = DATA.spells.length;
-  document.getElementById("statTecnicas").textContent = DATA.techniques.length;
-  document.getElementById("statItens").textContent = DATA.items.length;
-  document.getElementById("statPersonagens").textContent = DATA.characters.length;
+  document.getElementById("statRacas").textContent = mechRaces().length;
+  document.getElementById("statClasses").textContent = mechClasses().length;
+  document.getElementById("statMagias").textContent = mechSpells().length;
+  document.getElementById("statTecnicas").textContent = mechTechs().length;
+  document.getElementById("statItens").textContent = mechItems().length;
+  document.getElementById("statPersonagens").textContent = PCS.length;
 }
 
 /* =====================================================================
-   REAÇÕES (render estático)
+   REAÇÕES (render estático - vem do servidor)
    ===================================================================== */
 function renderReacoes(){
   const wrap=document.getElementById("gridReacoes"); if(!wrap) return;
-  wrap.innerHTML=REACTIONS.map(r=>`
+  const list = mechReactions();
+  if(!list.length){ wrap.innerHTML = emptyState("Nenhuma reação carregada."); return; }
+  wrap.innerHTML=list.map(r=>`
     <div class="card">
       <div class="card-top"><div><h3>${r.icon} ${r.name}</h3><div class="sub">${r.type}</div></div></div>
       <p><b>Gatilho:</b> ${r.trigger}</p>
@@ -633,11 +583,12 @@ function renderReacoes(){
 }
 
 /* =====================================================================
-   MECÂNICAS (render estático)
+   MECÂNICAS (render estático - vem do servidor)
    ===================================================================== */
 function renderMechanics(){
   const wrap = document.getElementById("mecanicasGrid");
-  wrap.innerHTML = MECHANICS.map(m=>`
+  const list = mechStats();
+  wrap.innerHTML = list.map(m=>`
     <div class="ref-card">
       <h3>${m.title}</h3>
       ${m.body?`<p>${m.body}</p>`:""}
@@ -646,40 +597,37 @@ function renderMechanics(){
 }
 
 /* =====================================================================
-   EXPORTAR / IMPORTAR / RESET
+   EXPORTAR / IMPORTAR / RESET (somente PERSONAGENS locais)
    ===================================================================== */
-document.getElementById("btnExport").addEventListener("click",()=>{
-  const blob = new Blob([JSON.stringify(DATA, null, 2)], {type:"application/json"});
+function exportPcs(){
+  const blob = new Blob([JSON.stringify(PCS, null, 2)], {type:"application/json"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url; a.download = "brisa-e-lamentacoes-dados.json"; a.click();
+  a.href = url; a.download = "meus-personagens.json"; a.click();
   URL.revokeObjectURL(url);
-  showToast("Dados exportados.");
-});
-document.getElementById("btnImport").addEventListener("click",()=>document.getElementById("importFile").click());
-document.getElementById("importFile").addEventListener("change",(e)=>{
+  showToast("Fichas exportadas.");
+}
+function importPcsFile(e){
   const file = e.target.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = ()=>{
     try{
-      const parsed = JSON.parse(reader.result);
-      DATA = Object.assign(structuredCloneSafe(DEFAULT_DATA), parsed);
-      persist(); renderAll();
-      showToast("Dados importados com sucesso.");
+      const arr = JSON.parse(reader.result);
+      if(!Array.isArray(arr)) throw new Error("O arquivo deve ser uma lista de fichas.");
+      PCS = arr;
+      savePcs(); renderPersonagens(); showToast("Fichas importadas.");
     }catch(err){ alert("Arquivo inválido: "+err.message); }
   };
   reader.readAsText(file);
   e.target.value = "";
-});
-document.getElementById("btnReset").addEventListener("click",()=>{
-  if(!confirm("Isso vai apagar tudo que você editou/adicionou e restaurar o conteúdo original do livro. Personagens criados também serão perdidos. Continuar?")) return;
-  DATA = structuredCloneSafe(DEFAULT_DATA);
-  persist(); renderAll();
-  showToast("Restaurado ao conteúdo original.");
-});
+}
+function resetPcs(){
+  if(!confirm("Apagar TODAS as fichas de personagem salvas neste aparelho? Essa ação não pode ser desfeita.")) return;
+  PCS = []; savePcs(); renderPersonagens(); showToast("Fichas apagadas.");
+}
 
 /* =====================================================================
-   INIT
+   RENDER GERAL
    ===================================================================== */
 function renderAll(){
   populateClassSelects();
@@ -694,4 +642,8 @@ function renderAll(){
   renderPersonagens();
   updateStats();
 }
-renderAll();
+
+/* =====================================================================
+   INIT
+   ===================================================================== */
+boot();
