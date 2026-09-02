@@ -370,11 +370,6 @@ function renderItems(){
 /* =====================================================================
    PARTICULARIDADES (somente leitura)
    ===================================================================== */
-function particularityField(selected){
-  const names = selected || [];
-  const options = mechParticularities().map(x=>`<label class="check-option"><input type="checkbox" name="particularities" value="${x.name}" ${names.includes(x.name)?"checked":""}> <span>${x.name}</span></label>`).join("");
-  return `<div class="field full"><label>Particularidades</label><div class="check-grid">${options||'<span class="hint">Nenhuma particularidade cadastrada.</span>'}</div><div class="hint">Você pode selecionar várias. Elas representam características mecânicas do personagem.</div></div>`;
-}
 function renderParticularidades(){
   const wrap=document.getElementById("gridParticularidades"); if(!wrap) return;
   const q=(document.getElementById("searchParticularidades")?.value||"").toLowerCase();
@@ -391,7 +386,7 @@ let currentCharId = null;
 function renderPersonagens(){
   const wrap = document.getElementById("gridPersonagens");
   document.getElementById("charSheetWrap").innerHTML = "";
-  if(PCS.length===0){ wrap.innerHTML = emptyState("Nenhum personagem criado ainda.", "openCharForm()"); updateStats(); return; }
+  if(PCS.length===0){ wrap.innerHTML = emptyState("Nenhum personagem criado ainda.", "openCharWizard()"); updateStats(); return; }
   wrap.innerHTML = PCS.map(p=>`
     <div class="char-card" onclick="viewChar('${p.id}')">
       <h3>${p.name||"Sem nome"}</h3>
@@ -408,78 +403,6 @@ function barRow(label, val, max, cls){
   return `<div class="bar-row"><span class="label">${label}</span><div class="bar-track"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div><span class="bar-val">${val}/${max}</span></div>`;
 }
 
-function openCharForm(id){
-  const p = id ? PCS.find(x=>x.id===id) : null;
-  const raceOptions = mechRaces().map(r=>r.name);
-  if(!raceOptions.length) raceOptions.push("");
-  const classOptions = mechClasses().map(c=>c.name);
-  if(!classOptions.length) classOptions.push("");
-  const body = `<div class="form-grid">
-    ${field("Nome do personagem","name",p?.name,{required:true,full:true})}
-    ${field("Raça","race",p?.race||raceOptions[0],{select:raceOptions})}
-    ${field("Classe","class",p?.class||classOptions[0],{select:classOptions})}
-    ${field("Caminho","path",p?.path)}
-    ${field("Nível","level",p?.level||1,{number:true})}
-    ${field("Força","forca",p?.attributes?.forca||0,{number:true})}
-    ${field("Agilidade","agilidade",p?.attributes?.agilidade||0,{number:true})}
-    ${field("Precisão","precisao",p?.attributes?.precisao||0,{number:true})}
-    ${field("Instinto","instinto",p?.attributes?.instinto||0,{number:true})}
-    ${field("Presença","presenca",p?.attributes?.presenca||0,{number:true})}
-    ${field("Inteligência","inteligencia",p?.attributes?.inteligencia||0,{number:true})}
-    ${field("Vida atual","vida",p?.vida,{number:true})}
-    ${field("Vida máxima","vidaMax",p?.vidaMax,{number:true})}
-    ${field("Recurso atual (Mana/Prana)","recurso",p?.recurso,{number:true})}
-    ${field("Recurso máximo","recursoMax",p?.recursoMax,{number:true})}
-    ${field("Lucidez atual","lucidez",p?.lucidez,{number:true})}
-    ${field("Lucidez máxima","lucidezMax",p?.lucidezMax,{number:true})}
-    ${field("Evasão","evasao",p?.evasao,{number:true})}
-    ${field("Experiences","experiences",(p?.experiences||[]).join("\n"),{textarea:true,full:true,hint:"Uma por linha"})}
-    ${particularityField(p?.particularities||[])}
-    ${field("Equipamento (arma, armadura, itens)","equipment",p?.equipment,{textarea:true,full:true})}
-    ${field("Traços / Características / Impulso","traits",p?.traits,{textarea:true,full:true})}
-    ${field("Anotações da identidade / história","notes",p?.notes,{textarea:true,full:true})}
-  </div>
-  <div class="hint" style="margin-top:10px;">Dica: deixe Vida/Recurso/Lucidez em branco e clique em "Salvar" - depois use o botão "Recalcular por Raça/Classe" na ficha para preencher automaticamente.</div>`;
-  openModal(id?"Editar personagem":"Novo personagem", body, (fd)=>{
-    const obj = {
-      id: id || uid("p"),
-      name: fd.get("name").trim(), race: fd.get("race"), class: fd.get("class"),
-      path: fd.get("path").trim(), level: Number(fd.get("level"))||1,
-      attributes:{
-        forca:Number(fd.get("forca"))||0, agilidade:Number(fd.get("agilidade"))||0, precisao:Number(fd.get("precisao"))||0,
-        instinto:Number(fd.get("instinto"))||0, presenca:Number(fd.get("presenca"))||0, inteligencia:Number(fd.get("inteligencia"))||0
-      },
-      vida: numOrCalc(fd.get("vida")), vidaMax: numOrCalc(fd.get("vidaMax")),
-      recurso: numOrCalc(fd.get("recurso")), recursoMax: numOrCalc(fd.get("recursoMax")),
-      lucidez: numOrCalc(fd.get("lucidez")), lucidezMax: numOrCalc(fd.get("lucidezMax")),
-      evasao: numOrCalc(fd.get("evasao")),
-      experiences: String(fd.get("experiences")||"").split("\n").map(s=>s.trim()).filter(Boolean),
-      particularities: fd.getAll("particularities"),
-      equipment: fd.get("equipment").trim(),
-      traits: fd.get("traits").trim(),
-      notes: fd.get("notes").trim(),
-      mecBaseline: MECH ? MECH.version : null
-    };
-    const cls = mechClasses().find(c=>c.name===obj.class);
-    obj.resourceName = cls?cls.resource:"Recurso";
-    autofillChar(obj, cls);
-    if(id){ const i=PCS.findIndex(x=>x.id===id); PCS[i]=obj; } else PCS.push(obj);
-    savePcs(); closeModal(); renderPersonagens();
-    if(id) viewChar(id); else viewChar(obj.id);
-    showToast(id?"Personagem atualizado.":"Personagem criado.");
-  });
-}
-function numOrCalc(v){ return (v===""||v===null||v===undefined) ? null : Number(v); }
-function autofillChar(obj, cls){
-  const isPhysical = cls ? cls.type==="Física" : true;
-  if(obj.vidaMax===null) obj.vidaMax = isPhysical?7:6;
-  if(obj.vida===null) obj.vida = obj.vidaMax;
-  if(obj.recursoMax===null) obj.recursoMax = cls?cls.resourceMax:20;
-  if(obj.recurso===null) obj.recurso = obj.recursoMax;
-  if(obj.lucidezMax===null) obj.lucidezMax = cls?cls.lucidityMax:(isPhysical?80:100);
-  if(obj.lucidez===null) obj.lucidez = obj.lucidezMax;
-  if(obj.evasao===null) obj.evasao = 10 + (Number(obj.attributes.agilidade)||0);
-}
 function recalcChar(id){
   const p = PCS.find(x=>x.id===id); if(!p) return;
   const cls = mechClasses().find(c=>c.name===p.class);
@@ -507,7 +430,7 @@ function viewChar(id){
         </div>
         <div class="section-actions">
           <button class="btn btn-sm" onclick="recalcChar('${p.id}')">↻ Recalcular por Raça/Classe</button>
-          <button class="btn btn-sm" onclick="openCharForm('${p.id}')">Editar</button>
+          <button class="btn btn-sm" onclick="openCharWizard('${p.id}')">Editar</button>
           <button class="btn btn-sm btn-danger" onclick="deleteChar('${p.id}')">Remover</button>
         </div>
       </div>
@@ -530,6 +453,9 @@ function viewChar(id){
           </div>
           <div class="res-block"><h4>PARTICULARIDADES</h4>
             <div class="tag-row">${(p.particularities||[]).map(name=>`<span class="tagpill">${name}</span>`).join("")||'<span class="tagpill">—</span>'}</div>
+          </div>
+          <div class="res-block"><h4>PODERES</h4>
+            <div class="tag-row">${((p.spells||[]).concat(p.techs||[]).map(name=>`<span class="tagpill">${name}</span>`)).join("")||'<span class="tagpill">—</span>'}</div>
           </div>
         </div>
         <div>
