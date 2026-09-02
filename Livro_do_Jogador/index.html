@@ -1736,7 +1736,8 @@ function resetWizard(){
     raceId:null, classId:null,
     attributes:{forca:0,agilidade:0,precisao:0,instinto:0,presenca:0,inteligencia:0},
     raceBonusAttr:null, hasRaceChoice:false,
-    experiences:"", particularities:[], equipment:"", traits:"", notes:""
+    experiences:"", particularities:[], equipment:"", traits:"", notes:"",
+    _selectedWeapons:[], _selectedArmor:null, _selectedFeatures:[]
   };
   wizEditId = null;
 }
@@ -1761,6 +1762,17 @@ function openCharForm(id){
     wiz.notes = p.notes||"";
     const race = DATA.races.find(r=>r.id===wiz.raceId);
     wiz.hasRaceChoice = race && /escolha/i.test(race.bonus||"");
+    (wiz._selectedWeapons||[]).length = 0;
+    wiz._selectedArmor = null;
+    const eq = (p.equipment||"").toLowerCase();
+    DATA.items.filter(i=>i.category==="Arma").forEach(w=>{
+      if(eq.includes(w.name.toLowerCase())){
+        if(!wiz._selectedWeapons.includes(w.id)) wiz._selectedWeapons.push(w.id);
+      }
+    });
+    DATA.items.filter(i=>i.category==="Armadura").forEach(a=>{
+      if(eq.includes(a.name.toLowerCase())) wiz._selectedArmor = a.id;
+    });
   } else {
     resetWizard();
   }
@@ -1823,7 +1835,7 @@ function renderWizardStep(){
   const body = document.getElementById("wizardBody");
   const dots = document.getElementById("wizardDots");
   const nav = document.getElementById("wizardNav");
-  const steps = 6;
+  const steps = 8;
   dots.innerHTML = Array.from({length:steps},(_, i)=>
     `<div class="wizard-step-dot ${i===wiz.step?'active':(i<wiz.step?'done':'')}"></div>`
   ).join("");
@@ -1835,7 +1847,9 @@ function renderWizardStep(){
     case 2: html = wizRenderClass(); break;
     case 3: html = wizRenderAttributes(); break;
     case 4: html = wizRenderFeatures(); break;
-    case 5: html = wizRenderDetails(); break;
+    case 5: html = wizRenderWeapons(); break;
+    case 6: html = wizRenderArmor(); break;
+    case 7: html = wizRenderExpPart(); break;
   }
   body.innerHTML = html;
 
@@ -1872,6 +1886,9 @@ function wizNextStep(){
   }
   if(wiz.step === 4){
     wizSyncFeaturesFromInputs();
+  }
+  if(wiz.step === 7){
+    wizSyncExpPartFromInputs();
   }
   wiz.step++;
   renderWizardStep();
@@ -2043,8 +2060,8 @@ function wizAttrChange(key, delta){
   const usedCounts = {};
   ATTR_KEYS.forEach(k=>{ usedCounts[wiz.attributes[k]] = (usedCounts[wiz.attributes[k]]||0)+1; });
   if(delta > 0){
-    if((usedCounts[curVal]||0) >= (distCounts[curVal]||0)) return;
-    if((usedCounts[newVal]||0) >= (distCounts[newVal]||0)) return;
+    if((usedCounts[curVal]||0) < 1) return;
+    if(((usedCounts[newVal]||0)+1) > (distCounts[newVal]||0)) return;
   }
   wiz.attributes[key] = newVal;
   renderWizardStep();
@@ -2105,13 +2122,91 @@ function wizToggleFeature(id){
   const item = allItems.find(x=>x.id===id);
   if(item) wizShowFeatureDetail(item, isMagic);
 }
-/* ---------- Step 5: Details ---------- */
-function wizRenderDetails(){
-  return `<p class="wizard-title">Detalhes Finais</p>
-  <p class="wizard-desc">Adicione equipamento, experiences, particularidades e anotações.</p>
+/* ---------- Step 5: Weapons ---------- */
+function wizRenderWeapons(){
+  const weapons = DATA.items.filter(i=>i.category==="Arma");
+  return `<p class="wizard-title">Armas</p>
+  <p class="wizard-desc">Selecione as armas do seu personagem. Clique para ver detalhes no painel lateral.</p>
+  <div class="select-grid" id="wizWeaponsGrid">
+    ${weapons.map(w=>{
+      const checked = (wiz._selectedWeapons||[]).includes(w.id);
+      return `<div class="select-card ${checked?'selected':''}" onclick="wizToggleWeapon('${w.id}')" data-id="${w.id}">
+        <div class="sc-name">${w.name}</div>
+        <div class="sc-tag tag-fisica">Tier ${w.tier}</div>
+        <div class="sc-meta"><b>${w.category}</b>${w.attr?` · Traço: <b>${w.attr}</b>`:""}</div>
+        ${w.damage?`<div class="sc-meta">Dano: <b>${w.damage} ${w.dtype||""}</b> · ${w.range||""} · ${w.burden||""}</div>`:""}
+        <div class="sc-body">${w.desc||""}</div>
+      </div>`;
+    }).join("")}
+    ${weapons.length===0?`<div class="empty-state" style="grid-column:1/-1;">Nenhuma arma cadastrada.</div>`:""}
+  </div>`;
+}
+function wizToggleWeapon(id){
+  if(!wiz._selectedWeapons) wiz._selectedWeapons = [];
+  const idx = wiz._selectedWeapons.indexOf(id);
+  if(idx>=0) wiz._selectedWeapons.splice(idx,1); else wiz._selectedWeapons.push(id);
+  document.querySelectorAll("#wizWeaponsGrid .select-card").forEach(c=>{
+    c.classList.toggle("selected", wiz._selectedWeapons.includes(c.dataset.id));
+  });
+  const item = DATA.items.find(x=>x.id===id);
+  if(item) wizShowItemDetail(item, "Arma");
+}
+function wizShowItemDetail(item, label){
+  const side = document.getElementById("wizardSide");
+  side.className = "wizard-side";
+  side.innerHTML = `<div class="wizard-side-content">
+    <h3>${item.name}</h3>
+    <span class="side-tag tag-fisica">${label} · Tier ${item.tier}</span>
+    ${item.attr?`<div class="side-meta"><span>Traço: <b>${item.attr}</b></span></div>`:""}
+    ${item.range?`<div class="side-meta"><span>Alcance: <b>${item.range}</b></span></div>`:""}
+    ${item.damage?`<div class="side-meta"><span>Dano: <b>${item.damage} ${item.dtype||""}</b></span><span>Burden: <b>${item.burden||"—"}</b></span></div>`:""}
+    <div class="side-identity">${item.desc||""}</div>
+    ${item.feature?`<div class="side-section"><div class="side-section-title">Feature</div><div class="side-trait">${item.feature}</div></div>`:""}
+  </div>`;
+}
+
+/* ---------- Step 6: Armor ---------- */
+function wizRenderArmor(){
+  const armors = DATA.items.filter(i=>i.category==="Armadura");
+  return `<p class="wizard-title">Armadura</p>
+  <p class="wizard-desc">Selecione a armadura do seu personagem. Clique para ver detalhes no painel lateral.</p>
+  <div class="select-grid" id="wizArmorGrid">
+    ${armors.map(a=>{
+      const checked = wiz._selectedArmor===a.id;
+      return `<div class="select-card ${checked?'selected':''}" onclick="wizSelectArmor('${a.id}')" data-id="${a.id}">
+        <div class="sc-name">${a.name}</div>
+        <div class="sc-tag tag-fisica">Tier ${a.tier}</div>
+        <div class="sc-meta"><b>Armadura</b></div>
+        <div class="sc-body">${a.desc||""}</div>
+        ${a.feature?`<div class="sc-meta" style="color:var(--brisa)">${a.feature}</div>`:""}
+      </div>`;
+    }).join("")}
+    ${armors.length===0?`<div class="empty-state" style="grid-column:1/-1;">Nenhuma armadura cadastrada.</div>`:""}
+  </div>`;
+}
+function wizSelectArmor(id){
+  if(wiz._selectedArmor === id){
+    wiz._selectedArmor = null;
+    wizClearSide();
+  } else {
+    wiz._selectedArmor = id;
+    const item = DATA.items.find(x=>x.id===id);
+    if(item) wizShowItemDetail(item, "Armadura");
+  }
+  document.querySelectorAll("#wizArmorGrid .select-card").forEach(c=>{
+    const isSel = c.dataset.id===wiz._selectedArmor;
+    c.classList.toggle("selected", isSel);
+    if(isSel) c.style.borderColor="var(--brisa)";
+    else c.style.borderColor="";
+  });
+}
+
+/* ---------- Step 7: Experiences & Particularities ---------- */
+function wizRenderExpPart(){
+  return `<p class="wizard-title">Experiências &amp; Particularidades</p>
+  <p class="wizard-desc">Registre as experiências do personagem e selecione particularidades. Adicione também traços e anotações finais.</p>
   <div class="form-grid">
     ${wizField("Experiences","wiz-exp",wiz.experiences,{textarea:true,full:true,hint:"Uma por linha. Experiences são marcas de experiência que dão +2 em testes ao custo de 1 Lucidez."})}
-    ${wizField("Equipamento","wiz-equip",wiz.equipment,{textarea:true,full:true})}
     ${wizField("Traços / Características / Impulso","wiz-traits",wiz.traits,{textarea:true,full:true})}
     ${wizField("Anotações (identidade / história)","wiz-notes",wiz.notes,{textarea:true,full:true})}
   </div>
@@ -2135,32 +2230,40 @@ function wizToggleParticularity(name, checked){
   if(checked){ if(!wiz.particularities.includes(name)) wiz.particularities.push(name); }
   else { wiz.particularities = wiz.particularities.filter(x=>x!==name); }
 }
+function wizSyncExpPartFromInputs(){
+  const expInp = document.getElementById("wiz-exp");
+  const traitsInp = document.getElementById("wiz-traits");
+  const notesInp = document.getElementById("wiz-notes");
+  if(expInp) wiz.experiences = expInp.value;
+  if(traitsInp) wiz.traits = traitsInp.value;
+  if(notesInp) wiz.notes = notesInp.value;
+}
 function wizSyncFeaturesFromInputs(){}
 
 /* ---------- Save ---------- */
 function wizSave(){
   wizSyncAttrsFromInputs();
+  if(wiz.step === 7) wizSyncExpPartFromInputs();
   const errs = wizValidate();
   if(errs.length){ alert("Corrija os erros:\n• "+errs.join("\n• ")); return; }
-  if(wiz.step===4) wizSyncFeaturesFromInputs();
-  if(wiz.step===5){
-    const expInp = document.getElementById("wiz-exp");
-    const equipInp = document.getElementById("wiz-equip");
-    const traitsInp = document.getElementById("wiz-traits");
-    const notesInp = document.getElementById("wiz-notes");
-    if(expInp) wiz.experiences = expInp.value;
-    if(equipInp) wiz.equipment = equipInp.value;
-    if(traitsInp) wiz.traits = traitsInp.value;
-    if(notesInp) wiz.notes = notesInp.value;
-  }
 
   const race = DATA.races.find(r=>r.id===wiz.raceId);
   const cls = DATA.classes.find(c=>c.id===wiz.classId);
-  const isPhysical = cls ? cls.type==="Física" : true;
 
   const attrs = {...wiz.attributes};
   const raceBon = wizRaceBonus();
   ATTR_KEYS.forEach(k=>{ attrs[k] = (wiz.attributes[k]||0) + (raceBon[k]||0); });
+
+  const weaponNames = (wiz._selectedWeapons||[]).map(id=>{ const it=DATA.items.find(x=>x.id===id); return it?it.name:""; }).filter(Boolean);
+  const armorObj = wiz._selectedArmor ? DATA.items.find(x=>x.id===wiz._selectedArmor) : null;
+  const armorName = armorObj ? armorObj.name : "";
+  let equipText = wiz.equipment || "";
+  if(weaponNames.length || armorName){
+    const parts = [];
+    if(weaponNames.length) parts.push("Armas: " + weaponNames.join(", "));
+    if(armorName) parts.push("Armadura: " + armorName);
+    equipText = parts.join("\n") + (equipText ? "\n" + equipText : "");
+  }
 
   const obj = {
     id: wizEditId || uid("p"),
@@ -2173,7 +2276,7 @@ function wizSave(){
     evasao: null,
     experiences: String(wiz.experiences||"").split("\n").map(s=>s.trim()).filter(Boolean),
     particularities: [...wiz.particularities],
-    equipment: wiz.equipment, traits: wiz.traits, notes: wiz.notes,
+    equipment: equipText, traits: wiz.traits, notes: wiz.notes,
     resourceName: cls?cls.resource:"Recurso"
   };
   autofillChar(obj, cls);
