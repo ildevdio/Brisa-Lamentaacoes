@@ -53,14 +53,14 @@ O GitHub Actions publica o novo `game-data.json` e o app automaticamente. Os jog
 
 ---
 
-## Sugestões da Comunidade (magias/técnicas/ferramentas)
+## Sugestões da Comunidade (novas classes, raças, magias, técnicas, ferramentas e particularidades)
 
-Além das mecânicas oficiais, o app permite que **jogadores proponham** novas magias, técnicas e ferramentas e que o Mestre **aprove/rejeite** — tudo definido em `Livro_do_Jogador/js/community.js`.
+Quando um jogador cria um item novo (botões **"+ Nova raça", "+ Nova classe", "+ Nova magia", "+ Nova técnica", "+ Novo item"** e **"+ Nova particularidade"**), ele não é salvo direto no catálogo: vira uma **solicitação** que só aparece depois que o Mestre aprovar. Personagens continuam **100% locais** — cada jogador tem as próprias fichas, sem passar por aprovação.
 
 **Fluxo**
-- O jogador clica em **"+ Adicionar magia/técnica/ferramenta"**, preenche e digita a **senha de contribuidor**. O item entra como *pendente* numa fila compartilhada (um Gist público).
-- Todos veem as *pendentes* na aba **Sugestões**. O Mestre clica **Aprovar/Rejeitar** (com a **senha de admin**).
-- Itens **aprovados** somem das pendências e passam a aparecer nos catálogos de **todos** os jogadores (marcados como da comunidade). Personagens continuam 100% locais.
+- O jogador clica em **"+ Adicionar..."**, preenche e digita a **senha de contribuidor** (opcional: o próprio nome para o admin saber quem pediu). O item entra como *pendente* numa fila compartilhada (um Gist público).
+- Todos veem as pendentes na aba **Sugestões**. O Mestre clica **Aprovar/Rejeitar** (com a **senha de admin**) — ao aprovar, o item é publicado nos catálogos de **todos** os jogadores.
+- A aba **Sugestões** também funciona como a "caixa de entrada" das solicitações para o Mestre confirmar.
 
 **Configuração única (dono) — necessária para funcionar:**
 1. Crie um **Gist PÚBLICO** com um arquivo chamado `catalog-contrib.json` contendo exatamente:

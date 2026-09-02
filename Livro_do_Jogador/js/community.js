@@ -75,7 +75,7 @@ function persistCommunity(c){ try{ localStorage.setItem(COMMUNITY.CACHE_KEY, JSO
    MESCLA itens aprovados nos catálogos (só adiciona; base vem fresca a cada boot)
    ===================================================================== */
 function commApply(){
-  const data = MECH && MECH.data;
+  const data = DATA;
   if(!data) return;
   const target = {
     magia:(it)=>{ if(!data.spells) data.spells=[]; it.forEach(x=>{ if(!data.spells.some(s=>s.id===x.id)) data.spells.push(x); }); },
@@ -117,10 +117,10 @@ async function commWrite(newComm){
    ===================================================================== */
 function commNewId(type){ return "comm_"+type+"_"+Math.random().toString(36).slice(2,9); }
 
-async function communityAdd(type, data, password){
+async function communityAdd(type, data, password, playerName){
   if(password!==COMMUNITY.PASSWORD_CONTRIB) throw new Error("Senha de contribuidor incorreta.");
   const item = { id: commNewId(type), type:type, data:data,
-    submittedBy:"", submittedAt:new Date().toISOString(), status:"pending" };
+    submittedBy:String(playerName||"").trim(), submittedAt:new Date().toISOString(), status:"pending" };
   const next = { pending: commPending().concat([item]), approved: commApproved() };
   await commWrite(next);
   return item;
@@ -142,6 +142,7 @@ async function communityReject(id, password){
 function commAddForm(type){
   // Distribuição de Nome (full), que aparece antes dos demais campos em todos os formulários.
   const nameField = field("Nome","name","",{required:true});
+  const playerNameField = `<div class="field full"><label>Seu nome (opcional)</label><input class="input" name="playerName" placeholder="Como o admin saberá quem enviou"></div>`;
   const passField = `<div class="field full"><label>Senha de contribuidor</label><input class="input" type="password" name="password" placeholder="Digite a senha (solicitar)" required></div>`;
   const hintField = `<div class="hint full" style="grid-column:1/-1;">O item entra como <b>pendente</b>. O admin aprovará para todos verem.</div>`;
 
@@ -150,14 +151,14 @@ function commAddForm(type){
   const rangeSel = ["Melee","Muito Perto","Perto","Longe","Muito Longe"];
 
   const forms = {
-    raca:()=>`<div class="form-grid">${nameField}
+    raca:()=>`<div class="form-grid">${nameField}${playerNameField}
       ${field("Bônus Simples","bonus","")}
       ${field("Aparência / expectativa de vida","appearance","",{full:true})}
       ${field("Identidade","identity","",{textarea:true,full:true,required:true})}
       ${field("Traços Marcantes","traits","",{textarea:true,full:true,hint:"Um traço por linha, no formato: Nome: Descrição"})}
       ${passField}${hintField}</div>`,
 
-    classe:()=>`<div class="form-grid">${nameField}
+    classe:()=>`<div class="form-grid">${nameField}${playerNameField}
       ${field("Tipo","type","Mágica",{select:["Física","Mágica"]})}
       ${field("Recurso principal","resource","Mana",{select:["Prana","Mana"]})}
       ${field("Máximo do recurso","resourceMax","",{number:true})}
@@ -170,7 +171,7 @@ function commAddForm(type){
       ${field("Caminhos","paths","",{textarea:true,full:true,hint:"Um por linha: Nome do Caminho | Foco | Áreas da árvore (separadas por vírgula)"})}
       ${passField}${hintField}</div>`,
 
-    magia:()=>`<div class="form-grid">${nameField}
+    magia:()=>`<div class="form-grid">${nameField}${playerNameField}
       ${field("Classe","class",classOptions[0]||"",{select:classOptions})}
       ${field("Círculo (1-7)","circle","1",{number:true})}
       ${field("Nível mínimo","levelMin","1",{number:true})}
@@ -181,7 +182,7 @@ function commAddForm(type){
       ${field("Efeito","effect","",{textarea:true,full:true,required:true})}
       ${passField}${hintField}</div>`,
 
-    tecnica:()=>`<div class="form-grid">${nameField}
+    tecnica:()=>`<div class="form-grid">${nameField}${playerNameField}
       ${field("Classe","class",classOptions[0]||"",{select:classOptions})}
       ${field("Grau (1-7)","grade","1",{number:true})}
       ${field("Nível mínimo","levelMin","1",{number:true})}
@@ -192,7 +193,7 @@ function commAddForm(type){
       ${field("Ferramenta recomendada","tool","",{textarea:true,full:true})}
       ${passField}${hintField}</div>`,
 
-    ferramenta:()=>`<div class="form-grid">${nameField}
+    ferramenta:()=>`<div class="form-grid">${nameField}${playerNameField}
       ${field("Categoria","category","Arma",{select:["Arma","Armadura","Ferramenta Mágica","Item Mágico","Consumível"]})}
       ${field("Tier (1-7)","tier","1",{number:true})}
       ${field("Traço/Atributo","attr","")}
@@ -204,7 +205,7 @@ function commAddForm(type){
       ${field("Descrição","desc","",{textarea:true,full:true,required:true})}
       ${passField}${hintField}</div>`,
 
-    particularidade:()=>`<div class="form-grid">${nameField}
+    particularidade:()=>`<div class="form-grid">${nameField}${playerNameField}
       ${field("Categoria","category","Geral",{select:["Geral","Comportamento","Treinamento","Profissão","Característica Física","Equipamento"]})}
       ${field("Descrição","description","",{textarea:true,full:true,required:true})}
       ${field("Efeito","effect","",{textarea:true,full:true,required:true})}
@@ -222,7 +223,7 @@ function commAddForm(type){
     try{
       const password = fd.get("password");
       const base = buildCommData(type, fd);
-      await communityAdd(type, base, password);
+      await communityAdd(type, base, password, fd.get("playerName"));
       closeModal(); await refreshCommunity();
       showToast("Sugestão enviada! Aguardando aprovação.");
     }catch(err){ showToast(err.message); }
@@ -279,7 +280,7 @@ function buildCommData(type, fd){
 function renderSuggestions(){
   const wrap=document.getElementById("gridSugestoes"); if(!wrap) return;
   const p=commPending();
-  if(!p.length){ wrap.innerHTML=emptyState("Nenhuma sugestão aguardando aprovação."); return; }
+  if(!p.length){ wrap.innerHTML=`<div class="empty-state">Nenhuma sugestão aguardando aprovação. Itens criados pelos jogadores (botões "+ Nova ...") aparecem aqui para você aprovar.</div>`; return; }
   const card=(s)=>{
     const d=s.data||{};
     let inner = "";
@@ -330,7 +331,7 @@ function renderSuggestions(){
     return `<div class="card">
       <div class="card-top"><div class="card-title">${escapeHtml(d.name||"Sem nome")}</div><div class="card-tag tag-magica">${s.status||"pending"}</div></div>
       ${inner}
-      ${(s.submittedAt?`<div class="card-meta"><span>${escapeHtml(new Date(s.submittedAt).toLocaleString("pt-BR"))}</span></div>`:"")}
+      ${(s.submittedBy||s.submittedAt)?`<div class="card-meta">${s.submittedBy?`<span>Por: <b>${escapeHtml(s.submittedBy)}</b></span>`:""}${s.submittedAt?`<span>${escapeHtml(new Date(s.submittedAt).toLocaleString("pt-BR"))}</span>`:""}</div>`:""}
       <div class="card-foot">
         <button class="btn btn-sm btn-danger" onclick="commPromptReject('${s.id}')">Rejeitar</button>
         <button class="btn btn-sm btn-primary" onclick="commPromptApprove('${s.id}')">Aprovar</button>
@@ -356,6 +357,7 @@ function commPromptReject(id){
 async function refreshCommunity(){
   await loadCommunity();
   commApply();
+  if(typeof persist==="function") persist();
   renderAll();
   if(document.getElementById("gridSugestoes")) renderSuggestions();
 }
