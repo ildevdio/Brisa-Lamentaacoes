@@ -78,14 +78,15 @@ function commApply(){
   const data = MECH && MECH.data;
   if(!data) return;
   const target = {
-    spells:(it)=>{ if(!data.spells) data.spells=[]; it.forEach(x=>{ if(!data.spells.some(s=>s.id===x.id)) data.spells.push(x); }); },
-    techs:(it)=>{ if(!data.techniques) data.techniques=[]; it.forEach(x=>{ if(!data.techniques.some(s=>s.id===x.id)) data.techniques.push(x); }); },
-    items:(it)=>{ if(!data.items) data.items=[]; it.forEach(x=>{ if(!data.items.some(s=>s.id===x.id)) data.items.push(x); }); }
+    magia:(it)=>{ if(!data.spells) data.spells=[]; it.forEach(x=>{ if(!data.spells.some(s=>s.id===x.id)) data.spells.push(x); }); },
+    tecnica:(it)=>{ if(!data.techniques) data.techniques=[]; it.forEach(x=>{ if(!data.techniques.some(s=>s.id===x.id)) data.techniques.push(x); }); },
+    ferramenta:(it)=>{ if(!data.items) data.items=[]; it.forEach(x=>{ if(!data.items.some(s=>s.id===x.id)) data.items.push(x); }); },
+    raca:(it)=>{ if(!data.races) data.races=[]; it.forEach(x=>{ if(!data.races.some(s=>s.id===x.id)) data.races.push(x); }); },
+    classe:(it)=>{ if(!data.classes) data.classes=[]; it.forEach(x=>{ if(!data.classes.some(s=>s.id===x.id)) data.classes.push(x); }); },
+    particularidade:(it)=>{ if(!data.particularidades) data.particularidades=[]; it.forEach(x=>{ if(!data.particularidades.some(s=>s.id===x.id)) data.particularidades.push(x); }); }
   };
   for(const a of commApproved()){
-    if(a.type==="magia" && target.spells) target.spells([a.data]);
-    else if(a.type==="tecnica" && target.techs) target.techs([a.data]);
-    else if(a.type==="ferramenta" && target.items) target.items([a.data]);
+    if(target[a.type]) target[a.type]([a.data]);
   }
 }
 
@@ -95,7 +96,7 @@ function commApply(){
    ===================================================================== */
 async function commWrite(newComm){
   const id=COMMUNITY.GIST_ID, tok=COMMUNITY.GIST_TOKEN;
-  if(!id||!tok||id.startsWith("COLE")||tok.startsWith("COLE")) throw new Error("Gist não configurado.");
+  if(!id||!tok||id.startsWith("COLE")||tok.startsWith("COLE")||tok==="GIST_TOKEN_PLACEHOLDER") throw new Error("Gist não configurado.");
   const payload = {
     description: "Brisa e Lamentações - catálogo compartilhado",
     files: { [COMMUNITY.FILE_NAME]: { content: JSON.stringify(newComm, null, 2) } }
@@ -139,43 +140,111 @@ async function communityReject(id, password){
    ABAS: adicionar (contribuidor) e Sugestões (admin)
    ===================================================================== */
 function commAddForm(type){
-  const meta = {
-    magia:    {title:"Nova Magia", clsKey:"class", label:"Classe", resource:"mana", resourceLabel:"Custo (Mana)", circle:true},
-    tecnica:  {title:"Nova Técnica", clsKey:"class", label:"Classe", resource:"prana", resourceLabel:"Custo (Prana)", grade:true},
-    ferramenta:{title:"Nova Ferramenta/Item", clsKey:"category", label:"Categoria", item:true}
-  }[type];
-  const fields = `
+  // Campos comuns: Nome + Senha de contribuidor.
+  const common = `
     ${field("Nome","name","",{full:true,required:true})}
-    ${type==="ferramenta"
-      ? `<div class="field"><label>${meta.label}</label><select class="input" name="category">
-           <option>Arma</option><option>Armadura</option><option>Ferramenta Mágica</option>
-           <option>Item Mágico</option><option>Consumível</option></select></div>
-         <div class="field"><label>Tier</label><input class="input" type="number" name="tier" value="1" min="1" max="7"></div>
-         <div class="field"><label>Traço/Atributo</label><input class="input" name="attr"></div>
-         <div class="field"><label>Alcance</label><input class="input" name="range"></div>`
-      : `<div class="field"><label>${meta.label}</label><input class="input" name="${meta.clsKey}" required></div>
-         <div class="field"><label>Atributo</label><input class="input" name="attr" required></div>
-         <div class="field"><label>${meta.resourceLabel}</label><input class="input" type="number" name="${meta.resource}" value="10"></div>
-         <div class="field"><label>${type==="magia"?"Círculo":"Grau"}</label><input class="input" type="number" name="${type==="magia"?"circle":"grade"}" value="1" min="1" max="7"></div>
-         <div class="field"><label>Alcance</label><input class="input" name="range"></div>`
-    }
-    <div class="field full"><label>Dano (ex: d6 MAG)</label><input class="input" name="damage"></div>
-    <div class="field full"><label>Efeito / Descrição</label><textarea class="input" name="effect" required></textarea></div>
     <div class="field full"><label>Senha de contribuidor</label><input class="input" type="password" name="password" placeholder="Digite a senha (solicitar)" required></div>
     <div class="hint full" style="grid-column:1/-1;">O item entra como <b>pendente</b>. O admin aprovará para todos verem.</div>`;
-  openModal(meta.title, fields, async (fd)=>{
+
+  const parts = {
+    magia:()=>[`Nova Magia`,
+      `${field("Classe","class","",{required:true})}
+       ${field("Círculo","circle","1",{number:true})}
+       ${field("Custo (Mana)","mana","10",{number:true})}
+       ${field("Atributo","attr","",{required:true})}
+       ${field("Alcance","range","")}]
+       ${field("Dano (ex: d6 MAG)","damage","")}
+       ${field("Efeito / Descrição","effect","",{textarea:true,required:true})}`,common],
+    tecnica:()=>[`Nova Técnica`,
+      `${field("Classe","class","",{required:true})}
+       ${field("Grau","grade","1",{number:true})}
+       ${field("Custo (Prana)","prana","5",{number:true})}
+       ${field("Atributo","attr","",{required:true})}
+       ${field("Tipo (Impacto/Defesa/Sequência...)","type","Impacto")}
+       ${field("Alcance","range","")}
+       ${field("Efeito / Descrição","effect","",{textarea:true,required:true})}`,common],
+    ferramenta:()=>[`Nova Ferramenta/Item`,
+      `${field("Categoria","category","Arma",{select:["Arma","Armadura","Ferramenta Mágica","Item Mágico","Consumível"]})}
+       ${field("Tier","tier","1",{number:true})}
+       ${field("Atributo","attr","")}
+       ${field("Alcance","range","")}
+       ${field("Dano (ex: d8+3 PHY)","damage","")}
+       ${field("Descrição","effect","",{textarea:true,required:true})}`,common],
+    raca:()=>[`Nova Raça`,
+      `${field("Bônus Simples (ex: +1 Força)","bonus","",{required:true})}
+       ${field("Aparência","appearance","")}
+       ${field("Identidade","identity","",{textarea:true,required:true})}
+       ${field("Traço 1 (nome)","trait1","")},${field("Traço 1 (descrição)","trait1d","",{full:true,textarea:true})}
+       ${field("Traço 2 (nome)","trait2","")},${field("Traço 2 (descrição)","trait2d","",{full:true,textarea:true})}
+       ${field("Traço 3 (nome)","trait3","")},${field("Traço 3 (descrição)","trait3d","",{full:true,textarea:true})}`,common],
+    classe:()=>[`Nova Classe`,
+      `${field("Tipo","type","Mágica",{select:["Mágica","Física"]})}
+       ${field("Recurso","resource","")},${field("Recurso Máximo","resourceMax","",{number:true})}
+       ${field("Lucidez Máxima","lucidityMax","",{number:true})}
+       ${field("Atributos (ex: Inteligência e Instinto)","attrs","",{required:true})}
+       ${field("Identidade","identity","",{textarea:true,required:true})}
+       ${field("Características (uma por linha)","features","",{textarea:true})}
+       ${field("Impulso","impulse","--","",{textarea:true})}`,common],
+    particularidade:()=>[`Nova Particularidade`,
+      `${field("Categoria","category","Comportamento",{select:["Comportamento","Treinamento","Profissão","Característica Física","Equipamento"]})}
+       ${field("Descrição","description","",{textarea:true,required:true})}
+       ${field("Efeito","effect","",{textarea:true,required:true})}
+       ${field("Gatilho","trigger","",{textarea:true})}
+       ${field("Limitação","limitation","",{textarea:true})}
+       ${field("Hiperfoco","hyperfocus","",{textarea:true})}
+       ${field("Abstinência","abstinence","",{textarea:true})}`,common]
+  }[type];
+  if(!parts) return;
+
+  const title = parts()[0], fields = parts()[1];
+  openModal(title, fields, async (fd)=>{
     try{
       const password = fd.get("password");
-      const base = type==="magia" ? { id:commNewId(type), class:fd.get("class"), circle:Number(fd.get("circle"))||1, levelMin:1, mana:Number(fd.get("mana"))||10 } :
-                   type==="tecnica" ? { id:commNewId(type), class:fd.get("class"), grade:Number(fd.get("grade"))||1, levelMin:1, prana:Number(fd.get("prana"))||5, type:"Impacto" } :
-                   { id:commNewId(type), category:fd.get("category"), tier:Number(fd.get("tier"))||1, attr:fd.get("attr"), range:fd.get("range") };
-      Object.assign(base,{ name:fd.get("name").trim(), attr:fd.get("attr")||"", range:fd.get("range")||"",
-        damage:fd.get("damage")||"", effect:fd.get("effect").trim(), desc:fd.get("effect").trim() });
+      const base = buildCommData(type, fd);
       await communityAdd(type, base, password);
       closeModal(); await refreshCommunity();
       showToast("Sugestão enviada! Aguardando aprovação.");
     }catch(err){ showToast(err.message); }
   });
+}
+
+// Monta o objeto a ser gravado, no mesmo formato do catálogo oficial.
+function buildCommData(type, fd){
+  const lines = (v)=>(v||"").split(/\n+/).map(s=>s.trim()).filter(Boolean).map(s=>({desc:s}));
+  switch(type){
+    case "magia": return {
+      id:commNewId(type), name:fd.get("name").trim(), class:fd.get("class"), circle:Number(fd.get("circle"))||1,
+      levelMin:1, mana:Number(fd.get("mana"))||10, attr:fd.get("attr")||"", range:fd.get("range")||"",
+      damage:fd.get("damage")||"", effect:fd.get("effect").trim() };
+    case "tecnica": return {
+      id:commNewId(type), name:fd.get("name").trim(), class:fd.get("class"), grade:Number(fd.get("grade"))||1,
+      levelMin:1, prana:Number(fd.get("prana"))||5, attr:fd.get("attr")||"", type:fd.get("type")||"Impacto",
+      range:fd.get("range")||"", effect:fd.get("effect").trim() };
+    case "ferramenta": return {
+      id:commNewId(type), category:fd.get("category")||"Arma", tier:Number(fd.get("tier"))||1,
+      name:fd.get("name").trim(), attr:fd.get("attr")||"", range:fd.get("range")||"",
+      damage:fd.get("damage")||"", desc:fd.get("effect").trim() };
+    case "raca": {
+      const out={ id:commNewId(type), name:fd.get("name").trim(), bonus:fd.get("bonus")||"",
+        appearance:fd.get("appearance")||"", identity:fd.get("identity").trim(), traits:[] };
+      for(let i=1;i<=3;i++){ const n=fd.get("trait"+i); if(n) out.traits.push({name:n,desc:fd.get("trait"+i+"d")||""}); }
+      return out;
+    }
+    case "classe": {
+      const fInfo = lines(fd.get("features"));
+      const imp = (fd.get("impulse")||"").trim();
+      return { id:commNewId(type), name:fd.get("name").trim(), type:fd.get("type")||"Mágica",
+        resource:fd.get("resource")||(fd.get("type")==="Mágica"?"Mana":"Prana"),
+        resourceMax:Number(fd.get("resourceMax"))||0, lucidityMax:Number(fd.get("lucidityMax"))||80,
+        attrs:fd.get("attrs")||"", identity:fd.get("identity").trim(), features:fInfo,
+        impulse: { name:"Impulso", desc: imp } };
+    }
+    case "particularidade": return {
+      id:commNewId(type), name:fd.get("name").trim(), category:fd.get("category")||"Comportamento",
+      description:fd.get("description").trim(), effect:fd.get("effect").trim(),
+      trigger:fd.get("trigger")||"", limitation:fd.get("limitation")||"",
+      hyperfocus:fd.get("hyperfocus")||"", abstinence:fd.get("abstinence")||"" };
+  }
 }
 
 function renderSuggestions(){
@@ -184,14 +253,26 @@ function renderSuggestions(){
   if(!p.length){ wrap.innerHTML=emptyState("Nenhuma sugestão aguardando aprovação."); return; }
   const card=(s)=>{
     const d=s.data||{};
-    const info = s.type==="magia" ? `Magia · ${d.class||"—"} · Círculo ${d.circle||1}` :
-                 s.type==="tecnica" ? `Técnica · ${d.class||"—"} · Grau ${d.grade||1}` :
-                 `Ferramenta · ${d.category||"—"} · Tier ${d.tier||1}`;
-    const meta = s.type==="magia"?`${d.mana} Mana`: (s.type==="tecnica"?`${d.prana} Prana`:"");
+    const info =
+      s.type==="magia"            ? `Magia · ${d.class||"—"} · Círculo ${d.circle||1}` :
+      s.type==="tecnica"          ? `Técnica · ${d.class||"—"} · Grau ${d.grade||1}` :
+      s.type==="ferramenta"       ? `Ferramenta · ${d.category||"—"} · Tier ${d.tier||1}` :
+      s.type==="raca"             ? `Raça · Bônus: ${d.bonus||"—"}` :
+      s.type==="classe"           ? `Classe · ${d.type||"—"} · Recurso ${d.resourceMax||0}` :
+      s.type==="particularidade"  ? `Particularidade · ${d.category||"—"}` : "";
+    const meta =
+      s.type==="magia" ? `${d.mana} Mana` :
+      s.type==="tecnica" ? `${d.prana} Prana` :
+      s.type==="classe" ? `${d.resourceMax||0}` : "";
+    const body =
+      s.type==="raca" ? (d.identity||"") :
+      s.type==="classe" ? (d.identity||"") :
+      s.type==="particularidade" ? (d.effect||"") :
+      (d.effect||d.desc||"");
     return `<div class="card">
       <div class="card-top"><div class="card-title">${escapeHtml(d.name||"Sem nome")}</div><div class="card-tag tag-magica">${s.status||"pending"}</div></div>
       <div class="card-meta"><span>${info}</span>${meta?`<span><b>${meta}</b></span>`:""}${(s.submittedAt?`<span>${new Date(s.submittedAt).toLocaleString("pt-BR")}</span>`:"")}</div>
-      <div class="card-body">${escapeHtml(d.effect||d.desc||"")}</div>
+      <div class="card-body">${escapeHtml(body)}</div>
       <div class="card-foot">
         <button class="btn btn-sm btn-danger" onclick="commPromptReject('${s.id}')">Rejeitar</button>
         <button class="btn btn-sm btn-primary" onclick="commPromptApprove('${s.id}')">Aprovar</button>
