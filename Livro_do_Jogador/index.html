@@ -340,7 +340,93 @@ nav.tabs{display:flex;flex-direction:column;gap:2px;}
 .notes-box{white-space:pre-wrap;font-size:13px;color:var(--text-dim);background:var(--bg-soft);border:1px solid var(--border-soft);border-radius:10px;padding:12px;min-height:60px;}
 
 .footer-note{margin-top:40px;padding-top:16px;border-top:1px solid var(--border-soft);font-size:12px;color:var(--text-faint);text-align:center;}
-.check-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--panel-2)}.check-option{display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;cursor:pointer}.check-option:hover{background:var(--panel)}.check-option input{accent-color:var(--brisa)}</style>
+.check-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--panel-2)}.check-option{display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;cursor:pointer}.check-option:hover{background:var(--panel)}.check-option input{accent-color:var(--brisa)}
+
+/* ---------- Character Creation Wizard ---------- */
+.modal.wizard-modal{max-width:960px;display:flex;gap:0;padding:0;overflow:hidden;}
+.wizard-layout{display:flex;width:100%;min-height:540px;}
+.wizard-main{flex:1;min-width:0;display:flex;flex-direction:column;padding:24px 26px 20px;overflow-y:auto;max-height:80vh;}
+.wizard-side{width:320px;flex-shrink:0;border-left:1px solid var(--border);background:var(--bg-soft);overflow-y:auto;max-height:80vh;display:flex;flex-direction:column;}
+.wizard-side.empty-side{display:flex;align-items:center;justify-content:center;}
+.wizard-side-empty{text-align:center;padding:24px;color:var(--text-faint);font-size:13px;line-height:1.6;}
+.wizard-side-empty .side-ico{font-size:36px;margin-bottom:10px;display:block;opacity:.4;}
+.wizard-side-content{padding:20px;display:flex;flex-direction:column;gap:14px;}
+.wizard-side-content h3{font-family:var(--font-display);font-size:17px;margin:0 0 4px;}
+.wizard-side-content .side-tag{font-size:11px;font-weight:600;letter-spacing:.03em;padding:3px 10px;border-radius:99px;display:inline-block;margin-bottom:6px;border:1px solid var(--border);color:var(--text-dim);}
+.wizard-side-content .side-identity{font-size:13px;color:var(--text-dim);line-height:1.6;}
+.wizard-side-content .side-section{margin-top:4px;}
+.wizard-side-content .side-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin-bottom:6px;}
+.wizard-side-content .side-trait{font-size:12.5px;color:var(--text-dim);padding:8px 10px;background:var(--panel);border:1px solid var(--border-soft);border-radius:8px;line-height:1.5;}
+.wizard-side-content .side-trait b{color:var(--text);display:block;margin-bottom:2px;font-size:12px;}
+.wizard-side-content .side-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text-dim);margin-bottom:4px;}
+.wizard-side-content .side-meta b{color:var(--text);}
+.wizard-side-content .side-path{font-size:12px;color:var(--text-dim);padding:8px 10px;background:var(--panel);border:1px solid var(--border-soft);border-radius:8px;margin-bottom:4px;}
+.wizard-side-content .side-path b{color:var(--brisa);}
+.wizard-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.wizard-head h2{font-family:var(--font-display);font-size:19px;margin:0;}
+.wizard-steps{display:flex;gap:4px;margin-bottom:18px;}
+.wizard-step-dot{width:10px;height:10px;border-radius:50%;background:var(--border);transition:background .2s;}
+.wizard-step-dot.active{background:var(--brisa);}
+.wizard-step-dot.done{background:var(--good);}
+.wizard-body{flex:1;overflow-y:auto;padding-right:4px;}
+.wizard-body::-webkit-scrollbar{width:6px;}
+.wizard-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px;}
+.wizard-title{font-family:var(--font-display);font-size:15px;font-weight:600;margin:0 0 6px;}
+.wizard-desc{font-size:13px;color:var(--text-dim);margin:0 0 14px;line-height:1.5;}
+.wizard-nav{display:flex;justify-content:space-between;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border-soft);}
+
+/* Selectable cards grid */
+.select-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+.select-card{background:var(--panel);border:2px solid var(--border-soft);border-radius:var(--radius);padding:14px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:6px;}
+.select-card:hover{border-color:var(--brisa-dim);background:var(--panel-2);}
+.select-card.selected{border-color:var(--brisa);background:rgba(95,184,201,.08);box-shadow:0 0 0 1px var(--brisa);}
+.select-card .sc-name{font-family:var(--font-display);font-size:15px;font-weight:600;}
+.select-card .sc-tag{font-size:10.5px;font-weight:600;letter-spacing:.03em;padding:2px 8px;border-radius:99px;border:1px solid var(--border);color:var(--text-dim);align-self:flex-start;}
+.select-card .sc-meta{font-size:12px;color:var(--text-dim);line-height:1.4;}
+.select-card .sc-body{font-size:12px;color:var(--text-faint);line-height:1.45;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;}
+
+/* Attribute distribution */
+.attr-dist-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.attr-dist-box{background:var(--bg-soft);border:1px solid var(--border-soft);border-radius:10px;padding:12px 10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;transition:border-color .15s;}
+.attr-dist-box .ad-name{font-size:11px;color:var(--text-faint);letter-spacing:.02em;font-weight:600;}
+.attr-dist-box .ad-controls{display:flex;align-items:center;gap:8px;}
+.attr-dist-box .ad-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--panel);color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;font-family:var(--font-mono);line-height:1;}
+.attr-dist-box .ad-btn:hover{border-color:var(--brisa-dim);background:var(--panel-2);}
+.attr-dist-box .ad-btn:disabled{opacity:.3;cursor:not-allowed;}
+.attr-dist-box .ad-val{font-family:var(--font-display);font-size:22px;min-width:30px;text-align:center;}
+.attr-dist-box .ad-val.pos{color:var(--good);}
+.attr-dist-box .ad-val.neg{color:var(--fear);}
+.attr-dist-box .ad-val.zero{color:var(--text-dim);}
+.attr-dist-box .ad-slots{font-size:10px;color:var(--text-faint);margin-top:2px;}
+.attr-dist-box .ad-slots .slot{display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 1px;vertical-align:middle;}
+.attr-dist-box .ad-slots .slot.used{background:var(--brisa);}
+.attr-dist-box .ad-slots .slot.empty{background:var(--border);}
+.attr-dist-box .ad-race-bonus{font-size:10px;color:var(--hope);margin-top:2px;font-weight:600;}
+.attr-dist-summary{margin-top:14px;padding:12px 14px;background:var(--panel);border:1px solid var(--border-soft);border-radius:10px;font-size:12.5px;color:var(--text-dim);line-height:1.6;}
+.attr-dist-summary b{color:var(--text);}
+.attr-dist-summary .err{color:var(--fear);font-weight:600;}
+
+/* Race bonus selector */
+.race-bonus-select{margin-top:10px;padding:12px 14px;background:var(--panel);border:1px solid var(--border-soft);border-radius:10px;}
+.race-bonus-select label{font-size:12px;color:var(--text-dim);font-weight:600;display:block;margin-bottom:6px;}
+.race-bonus-select select{width:100%;}
+
+/* Particularity select in wizard */
+.wiz-check-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;}
+.wiz-check-option{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:6px;cursor:pointer;border:1px solid var(--border-soft);background:var(--panel);transition:border-color .12s;}
+.wiz-check-option:hover{border-color:var(--brisa-dim);}
+.wiz-check-option input{accent-color:var(--brisa);margin-top:2px;flex-shrink:0;}
+.wiz-check-option .wco-info{font-size:12px;line-height:1.4;}
+.wiz-check-option .wco-name{color:var(--text);font-weight:600;}
+.wiz-check-option .wco-desc{color:var(--text-faint);font-size:11px;margin-top:2px;}
+
+@media(max-width:900px){
+  .wizard-layout{flex-direction:column;}
+  .wizard-side{width:100%;border-left:none;border-top:1px solid var(--border);max-height:250px;}
+  .wizard-main{max-height:none;}
+  .attr-dist-grid{grid-template-columns:repeat(2,1fr);}
+  .select-grid{grid-template-columns:1fr;}
+}</style>
 </head>
 <body>
 <div class="app">
@@ -583,6 +669,27 @@ nav.tabs{display:flex;flex-direction:column;gap:2px;}
 
 <div class="modal-overlay hidden" id="modalOverlay">
   <div class="modal" id="modalBox"></div>
+</div>
+<div class="modal-overlay hidden" id="wizardOverlay">
+  <div class="modal wizard-modal" id="wizardBox">
+    <div class="wizard-layout">
+      <div class="wizard-main">
+        <div class="wizard-head">
+          <h2 id="wizardTitle">Criar Personagem</h2>
+          <button class="modal-close" onclick="closeWizard()">&times;</button>
+        </div>
+        <div class="wizard-steps" id="wizardDots"></div>
+        <div class="wizard-body" id="wizardBody"></div>
+        <div class="wizard-nav" id="wizardNav"></div>
+      </div>
+      <div class="wizard-side empty-side" id="wizardSide">
+        <div class="wizard-side-empty">
+          <span class="side-ico">📖</span>
+          Selecione um item para ver<br>todos os detalhes aqui
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -1610,6 +1717,567 @@ if(typeof loadCommunity==="function" && typeof commApply==="function"){
     renderAll();
     if(document.getElementById("gridSugestoes")) renderSuggestions();
   }).catch(()=>{});
+}
+
+/* =====================================================================
+   WIZARD DE CRIAÇÃO DE PERSONAGEM
+   ===================================================================== */
+const ATTR_KEYS = ["forca","agilidade","precisao","instinto","presenca","inteligencia"];
+const ATTR_NAMES = {forca:"Força",agilidade:"Agilidade",precisao:"Precisão",instinto:"Instinto",presenca:"Presença",inteligencia:"Inteligência"};
+const ATTR_DISTRIBUTION = [{val:2,count:1},{val:1,count:2},{val:0,count:2},{val:-1,count:1}];
+const ATTR_SLOTS = ATTR_DISTRIBUTION.flatMap(d=>Array(d.count).fill(d.val));
+
+let wiz = {};
+let wizEditId = null;
+
+function resetWizard(){
+  wiz = {
+    step:0, name:"", path:"", level:1,
+    raceId:null, classId:null,
+    attributes:{forca:0,agilidade:0,precisao:0,instinto:0,presenca:0,inteligencia:0},
+    raceBonusAttr:null, hasRaceChoice:false,
+    experiences:"", particularities:[], equipment:"", traits:"", notes:""
+  };
+  wizEditId = null;
+}
+
+function openCharForm(id){
+  if(id){
+    wizEditId = id;
+    const p = DATA.characters.find(x=>x.id===id);
+    if(!p) return;
+    resetWizard();
+    wizEditId = id;
+    wiz.name = p.name||"";
+    wiz.path = p.path||"";
+    wiz.level = p.level||1;
+    wiz.raceId = (DATA.races.find(r=>r.name===p.race))?.id||null;
+    wiz.classId = (DATA.classes.find(c=>c.name===p.class))?.id||null;
+    wiz.attributes = {...(p.attributes||{forca:0,agilidade:0,precisao:0,instinto:0,presenca:0,inteligencia:0})};
+    wiz.experiences = (p.experiences||[]).join("\n");
+    wiz.particularities = [...(p.particularities||[])];
+    wiz.equipment = p.equipment||"";
+    wiz.traits = p.traits||"";
+    wiz.notes = p.notes||"";
+    const race = DATA.races.find(r=>r.id===wiz.raceId);
+    wiz.hasRaceChoice = race && /escolha/i.test(race.bonus||"");
+  } else {
+    resetWizard();
+  }
+  document.getElementById("wizardOverlay").classList.remove("hidden");
+  renderWizardStep();
+}
+
+function closeWizard(){
+  document.getElementById("wizardOverlay").classList.add("hidden");
+  wiz = {};
+  wizEditId = null;
+}
+document.getElementById("wizardOverlay").addEventListener("click",(e)=>{
+  if(e.target.id==="wizardOverlay") closeWizard();
+});
+
+function wizTotalPoints(){
+  return ATTR_KEYS.reduce((s,k)=>s+(wiz.attributes[k]||0),0);
+}
+function wizRaceBonus(){
+  if(!wiz.raceId || !wiz.hasRaceChoice || !wiz.raceBonusAttr) return {};
+  const b = {};
+  b[wiz.raceBonusAttr] = 1;
+  return b;
+}
+function wizFinalAttr(key){
+  return (wiz.attributes[key]||0) + (wizRaceBonus()[key]||0);
+}
+function wizValidate(){
+  const errs = [];
+  if(!wiz.name.trim()) errs.push("Nome é obrigatório.");
+  if(!wiz.raceId) errs.push("Selecione uma raça.");
+  if(!wiz.classId) errs.push("Selecione uma classe.");
+  const total = wizTotalPoints();
+  if(total !== 3) errs.push(`Distribuição de atributos inválida (total ${total}, deve ser 3).`);
+  const usedSlots = {};
+  const distributionCounts = {};
+  ATTR_SLOTS.forEach(v=>{ distributionCounts[v] = (distributionCounts[v]||0)+1; });
+  ATTR_KEYS.forEach(k=>{
+    const v = wiz.attributes[k];
+    usedSlots[v] = (usedSlots[v]||0)+1;
+    if(v < -1 || v > 2) errs.push(`${ATTR_NAMES[k]} fora do limite (${v}).`);
+  });
+  for(const v of Object.keys(usedSlots)){
+    if((usedSlots[v]||0) > (distributionCounts[v]||0)){
+      errs.push(`Muitos atributos com valor ${v>=0?"+":""}${v} (${usedSlots[v]} de ${distributionCounts[v]} permitidos).`);
+    }
+  }
+  const raceBon = wizRaceBonus();
+  for(const k of ATTR_KEYS){
+    const final = (wiz.attributes[k]||0) + (raceBon[k]||0);
+    if(final > 3) errs.push(`${ATTR_NAMES[k]} ficaria com +${final} (máximo +3).`);
+  }
+  if(wiz.hasRaceChoice && !wiz.raceBonusAttr) errs.push("Escolha o atributo do bônus racial.");
+  return errs;
+}
+
+/* ---------- Wizard Step Rendering ---------- */
+function renderWizardStep(){
+  const body = document.getElementById("wizardBody");
+  const dots = document.getElementById("wizardDots");
+  const nav = document.getElementById("wizardNav");
+  const steps = 6;
+  dots.innerHTML = Array.from({length:steps},(_, i)=>
+    `<div class="wizard-step-dot ${i===wiz.step?'active':(i<wiz.step?'done':'')}"></div>`
+  ).join("");
+
+  let html = "";
+  switch(wiz.step){
+    case 0: html = wizRenderIdentity(); break;
+    case 1: html = wizRenderRace(); break;
+    case 2: html = wizRenderClass(); break;
+    case 3: html = wizRenderAttributes(); break;
+    case 4: html = wizRenderFeatures(); break;
+    case 5: html = wizRenderDetails(); break;
+  }
+  body.innerHTML = html;
+
+  let navHtml = "";
+  if(wiz.step > 0) navHtml += `<button class="btn" onclick="wizPrevStep()">← Voltar</button>`;
+  else navHtml += `<div></div>`;
+  if(wiz.step < steps-1) navHtml += `<button class="btn btn-primary" onclick="wizNextStep()">Próximo →</button>`;
+  else navHtml += `<button class="btn btn-primary" onclick="wizSave()">${wizEditId?"Salvar Alterações":"Criar Personagem"}</button>`;
+  nav.innerHTML = navHtml;
+
+  wizClearSide();
+}
+
+function wizPrevStep(){ wiz.step--; renderWizardStep(); }
+function wizNextStep(){
+  if(wiz.step === 0){
+    const nameInp = document.getElementById("wiz-name");
+    const pathInp = document.getElementById("wiz-path");
+    const levelInp = document.getElementById("wiz-level");
+    if(nameInp) wiz.name = nameInp.value.trim();
+    if(pathInp) wiz.path = pathInp.value.trim();
+    if(levelInp) wiz.level = Number(levelInp.value)||1;
+  }
+  if(wiz.step === 1){
+    wiz.hasRaceChoice = false;
+    wiz.raceBonusAttr = null;
+    const race = DATA.races.find(r=>r.id===wiz.raceId);
+    if(race){
+      wiz.hasRaceChoice = /escolha/i.test(race.bonus||"");
+    }
+  }
+  if(wiz.step === 3){
+    wizSyncAttrsFromInputs();
+  }
+  if(wiz.step === 4){
+    wizSyncFeaturesFromInputs();
+  }
+  wiz.step++;
+  renderWizardStep();
+}
+
+/* ---------- Step 0: Identity ---------- */
+function wizRenderIdentity(){
+  return `<p class="wizard-title">Identidade do Personagem</p>
+  <p class="wizard-desc">Comece pelo básico: nome, caminho e nível.</p>
+  <div class="form-grid">
+    ${wizField("Nome do personagem","wiz-name",wiz.name,{required:true,full:true})}
+    ${wizField("Caminho (opcional)","wiz-path",wiz.path,{full:true,hint:"O caminho ideológico ou de vida do personagem."})}
+    ${wizField("Nível","wiz-level",wiz.level,{number:true})}
+  </div>`;
+}
+
+/* ---------- Step 1: Race ---------- */
+function wizRenderRace(){
+  const list = DATA.races;
+  return `<p class="wizard-title">Escolha sua Raça</p>
+  <p class="wizard-desc">Clique em uma raça para ver todos os detalhes no painel lateral. Clique novamente para selecioná-la.</p>
+  <div class="select-grid" id="wizRaceGrid">
+    ${list.map(r=>`
+      <div class="select-card ${wiz.raceId===r.id?'selected':''}" onclick="wizSelectRace('${r.id}')" data-id="${r.id}">
+        <div class="sc-name">${r.name}</div>
+        <div class="sc-meta">Bônus: <b>${r.bonus||"—"}</b></div>
+        <div class="sc-body">${r.identity||""}</div>
+      </div>
+    `).join("")}
+  </div>`;
+}
+function wizSelectRace(id){
+  const race = DATA.races.find(r=>r.id===id);
+  if(!race) return;
+  if(wiz.raceId === id){
+    wiz.raceId = null;
+    wiz.hasRaceChoice = false;
+    wiz.raceBonusAttr = null;
+    wizClearSide();
+  } else {
+    wiz.raceId = id;
+    wiz.hasRaceChoice = /escolha/i.test(race.bonus||"");
+    wiz.raceBonusAttr = null;
+    wizShowRaceDetail(race);
+  }
+  document.querySelectorAll("#wizRaceGrid .select-card").forEach(c=>{
+    const isSel = c.dataset.id===wiz.raceId;
+    c.classList.toggle("selected", isSel);
+    if(isSel) c.style.borderColor="var(--brisa)";
+    else c.style.borderColor="";
+  });
+}
+
+/* ---------- Step 2: Class ---------- */
+function wizRenderClass(){
+  const list = DATA.classes;
+  return `<p class="wizard-title">Escolha sua Classe</p>
+  <p class="wizard-desc">Clique em uma classe para ver detalhes no painel lateral. A classe define seu recurso (Mana/Prana) e habilidades.</p>
+  <div class="select-grid" id="wizClassGrid">
+    ${list.map(c=>`
+      <div class="select-card ${wiz.classId===c.id?'selected':''}" onclick="wizSelectClass('${c.id}')" data-id="${c.id}">
+        <div class="sc-name">${c.name}</div>
+        <div class="sc-tag ${c.type==='Física'?'tag-fisica':'tag-magica'}">${c.type}</div>
+        <div class="sc-meta">Recurso: <b>${c.resource} ${c.resourceMax}</b> · Lucidez: <b>${c.lucidityMax}</b></div>
+        <div class="sc-meta">Atributos: <b>${c.attrs||"—"}</b></div>
+        <div class="sc-body">${c.identity||""}</div>
+      </div>
+    `).join("")}
+  </div>`;
+}
+function wizSelectClass(id){
+  const cls = DATA.classes.find(c=>c.id===id);
+  if(!cls) return;
+  if(wiz.classId === id){
+    wiz.classId = null;
+    wizClearSide();
+  } else {
+    wiz.classId = id;
+    wizShowClassDetail(cls);
+  }
+  document.querySelectorAll("#wizClassGrid .select-card").forEach(c=>{
+    const isSel = c.dataset.id===wiz.classId;
+    c.classList.toggle("selected", isSel);
+    if(isSel) c.style.borderColor="var(--brisa)";
+    else c.style.borderColor="";
+  });
+}
+
+/* ---------- Step 3: Attributes ---------- */
+function wizRenderAttributes(){
+  const usedSlots = {};
+  ATTR_KEYS.forEach(k=>{ usedSlots[wiz.attributes[k]] = (usedSlots[wiz.attributes[k]]||0)+1; });
+  const distributionCounts = {};
+  ATTR_SLOTS.forEach(v=>{ distributionCounts[v] = (distributionCounts[v]||0)+1; });
+
+  let valid = true;
+  ATTR_KEYS.forEach(k=>{
+    const v = wiz.attributes[k];
+    if(usedSlots[v] > distributionCounts[v]) valid = false;
+  });
+  const total = wizTotalPoints();
+
+  const race = DATA.races.find(r=>r.id===wiz.raceId);
+  let raceBonusHtml = "";
+  if(wiz.hasRaceChoice && race){
+    const attrOpts = ATTR_KEYS.map(k=>`<option value="${k}" ${wiz.raceBonusAttr===k?"selected":""}>${ATTR_NAMES[k]}</option>`).join("");
+    raceBonusHtml = `<div class="race-bonus-select">
+      <label>${race.bonus}:</label>
+      <select class="input" onchange="wiz.raceBonusAttr=this.value||null;renderWizardStep();">
+        <option value="">— Escolha um atributo —</option>${attrOpts}
+      </select>
+    </div>`;
+  } else if(race && race.bonus){
+    const bonusParsed = wizParseRaceBonus(race.bonus);
+    if(bonusParsed){
+      raceBonusHtml = `<div class="race-bonus-select"><label>Bônus racial automático:</label><div style="font-size:13px;color:var(--hope);margin-top:4px;">${race.bonus} → <b>+1 ${ATTR_NAMES[bonusParsed]}</b></div></div>`;
+    }
+  }
+
+  const slotLabels = {};
+  [2,1,0,-1].forEach(v=>{
+    const total = ATTR_SLOTS.filter(s=>s===v).length;
+    const used = usedSlots[v]||0;
+    slotLabels[v] = `${used}/${total}`;
+  });
+
+  return `<p class="wizard-title">Distribuição de Atributos</p>
+  <p class="wizard-desc">
+    Distribua: <b>1</b> atributo em <b>+2</b>, <b>2</b> em <b>+1</b>, <b>2</b> em <b>+0</b>, <b>1</b> em <b>-1</b> (total = +3).<br>
+    Depois, some o bônus da raça. Nenhum atributo pode passar de +3 ou ficar abaixo de -1 no nível 1.
+  </p>
+  <div class="attr-dist-grid" id="wizAttrGrid">
+    ${ATTR_KEYS.map(k=>{
+      const v = wiz.attributes[k];
+      const raceBon = wizRaceBonus()[k]||0;
+      const final = v + raceBon;
+      const cls = final > 0 ? "pos" : (final < 0 ? "neg" : "zero");
+      const canInc = v < 2 && (usedSlots[v]||0) < (distributionCounts[v]||0) + (v+1<=2?0:0);
+      const canDec = v > -1;
+      const slotsHtml = ATTR_SLOTS.sort((a,b)=>b-a).map(sv=>{
+        const filled = sv === v && (usedSlots[sv]||0) > 0;
+        return `<span class="slot ${filled?'used':'empty'}"></span>`;
+      }).join("");
+      return `<div class="attr-dist-box">
+        <div class="ad-name">${ATTR_NAMES[k]}</div>
+        <div class="ad-controls">
+          <button class="ad-btn" onclick="wizAttrChange('${k}',-1)" ${v<=-1?'disabled':''}>−</button>
+          <div class="ad-val ${cls}">${v>=0?"+":""}${v}</div>
+          <button class="ad-btn" onclick="wizAttrChange('${k}',1)" ${v>=2?'disabled':''}>+</button>
+        </div>
+        ${raceBon?`<div class="ad-race-bonus">+${raceBon} racial</div>`:""}
+        ${raceBon?`<div class="ad-name" style="font-size:13px;font-family:var(--font-display);margin-top:2px;color:${final>0?'var(--good)':(final<0?'var(--fear)':'var(--text-dim)')}">= ${final>=0?"+":""}${final}</div>`:""}
+      </div>`;
+    }).join("")}
+  </div>
+  ${raceBonusHtml}
+  <div class="attr-dist-summary">
+    <b>Total distribuído:</b> ${total>=0?"+":""}${total} / +3<br>
+    ${!valid?'<span class="err">Distribuição inválida - ajuste os atributos.</span>':'<span style="color:var(--good)">Distribuição válida.</span>'}
+  </div>`;
+}
+function wizAttrChange(key, delta){
+  wizSyncAttrsFromInputs();
+  const curVal = wiz.attributes[key];
+  const newVal = curVal + delta;
+  if(newVal < -1 || newVal > 2) return;
+  const distCounts = {};
+  ATTR_SLOTS.forEach(v=>{ distCounts[v] = (distCounts[v]||0)+1; });
+  const usedCounts = {};
+  ATTR_KEYS.forEach(k=>{ usedCounts[wiz.attributes[k]] = (usedCounts[wiz.attributes[k]]||0)+1; });
+  if(delta > 0){
+    if((usedCounts[curVal]||0) >= (distCounts[curVal]||0)) return;
+    if((usedCounts[newVal]||0) >= (distCounts[newVal]||0)) return;
+  }
+  wiz.attributes[key] = newVal;
+  renderWizardStep();
+}
+function wizSyncAttrsFromInputs(){
+  ATTR_KEYS.forEach(k=>{
+    const inp = document.getElementById("wiz-attr-"+k);
+    if(inp) wiz.attributes[k] = Number(inp.value)||0;
+  });
+}
+function wizParseRaceBonus(bonusStr){
+  if(!bonusStr) return null;
+  const s = bonusStr.toLowerCase();
+  for(const k of ATTR_KEYS){
+    const name = ATTR_NAMES[k].toLowerCase();
+    if(s.includes(name) && /\+1/.test(s)){
+      if(s.includes("ou") || s.includes("escolha")) return null;
+      return k;
+    }
+  }
+  return null;
+}
+
+/* ---------- Step 4: Features (Spells/Techniques) ---------- */
+function wizRenderFeatures(){
+  const cls = DATA.classes.find(c=>c.id===wiz.classId);
+  const isMagic = cls && cls.type==="Mágica";
+  const items = isMagic ? DATA.spells.filter(s=>s.class===cls.name) : DATA.techniques.filter(t=>t.class===cls.name);
+  const itemType = isMagic ? "Magia" : "Técnica";
+  const resName = cls ? cls.resource : "Recurso";
+
+  return `<p class="wizard-title">${isMagic?"Magias":"Técnicas"} da Classe</p>
+  <p class="wizard-desc">Selecione as ${isMagic?"magias":"técnicas"} iniciais da sua classe. Pode escolher várias — são ${isMagic?"Círculo I":"Grau I"} e nível mínimo 1.</p>
+  <div class="select-grid" id="wizFeaturesGrid">
+    ${items.map(f=>{
+      const checked = (wiz._selectedFeatures||[]).includes(f.id);
+      const meta = isMagic ? `Círculo ${f.circle} · ${f.mana} Mana · ${f.attr}` : `Grau ${f.grade} · ${f.prana} Prana · ${f.attr} · ${f.type}`;
+      return `<div class="select-card ${checked?'selected':''}" onclick="wizToggleFeature('${f.id}')" data-id="${f.id}">
+        <div class="sc-name">${f.name}</div>
+        <div class="sc-tag ${isMagic?'tag-magica':'tag-fisica'}">${isMagic?"Círculo "+f.circle:"Grau "+f.grade}</div>
+        <div class="sc-meta"><b>${meta}</b></div>
+        <div class="sc-body">${f.effect||""}</div>
+      </div>`;
+    }).join("")}
+    ${items.length===0?`<div class="empty-state" style="grid-column:1/-1;">Nenhuma ${itemType.toLowerCase()} disponível para esta classe.</div>`:""}
+  </div>`;
+}
+function wizToggleFeature(id){
+  if(!wiz._selectedFeatures) wiz._selectedFeatures = [];
+  const idx = wiz._selectedFeatures.indexOf(id);
+  if(idx>=0) wiz._selectedFeatures.splice(idx,1); else wiz._selectedFeatures.push(id);
+  document.querySelectorAll("#wizFeaturesGrid .select-card").forEach(c=>{
+    c.classList.toggle("selected", wiz._selectedFeatures.includes(c.dataset.id));
+  });
+  const cls = DATA.classes.find(c=>c.id===wiz.classId);
+  const isMagic = cls && cls.type==="Mágica";
+  const allItems = isMagic ? DATA.spells : DATA.techniques;
+  const item = allItems.find(x=>x.id===id);
+  if(item) wizShowFeatureDetail(item, isMagic);
+}
+/* ---------- Step 5: Details ---------- */
+function wizRenderDetails(){
+  return `<p class="wizard-title">Detalhes Finais</p>
+  <p class="wizard-desc">Adicione equipamento, experiences, particularidades e anotações.</p>
+  <div class="form-grid">
+    ${wizField("Experiences","wiz-exp",wiz.experiences,{textarea:true,full:true,hint:"Uma por linha. Experiences são marcas de experiência que dão +2 em testes ao custo de 1 Lucidez."})}
+    ${wizField("Equipamento","wiz-equip",wiz.equipment,{textarea:true,full:true})}
+    ${wizField("Traços / Características / Impulso","wiz-traits",wiz.traits,{textarea:true,full:true})}
+    ${wizField("Anotações (identidade / história)","wiz-notes",wiz.notes,{textarea:true,full:true})}
+  </div>
+  <div class="field full" style="margin-top:12px;">
+    <label style="font-size:12px;color:var(--text-dim);font-weight:600;display:block;margin-bottom:8px;">Particularidades</label>
+    <div class="wiz-check-grid">
+      ${(DATA.particularities||[]).map(p=>`
+        <label class="wiz-check-option" onclick="event.stopPropagation()">
+          <input type="checkbox" value="${p.name}" ${wiz.particularities.includes(p.name)?"checked":""} onchange="wizToggleParticularity('${p.name}',this.checked)">
+          <div class="wco-info">
+            <div class="wco-name">${p.name}</div>
+            <div class="wco-desc">${p.category||"Geral"} — ${p.description||""}</div>
+          </div>
+        </label>
+      `).join("")}
+      ${(DATA.particularities||[]).length===0?'<span style="font-size:12px;color:var(--text-faint);">Nenhuma particularidade cadastrada.</span>':""}
+    </div>
+  </div>`;
+}
+function wizToggleParticularity(name, checked){
+  if(checked){ if(!wiz.particularities.includes(name)) wiz.particularities.push(name); }
+  else { wiz.particularities = wiz.particularities.filter(x=>x!==name); }
+}
+function wizSyncFeaturesFromInputs(){}
+
+/* ---------- Save ---------- */
+function wizSave(){
+  wizSyncAttrsFromInputs();
+  const errs = wizValidate();
+  if(errs.length){ alert("Corrija os erros:\n• "+errs.join("\n• ")); return; }
+  if(wiz.step===4) wizSyncFeaturesFromInputs();
+  if(wiz.step===5){
+    const expInp = document.getElementById("wiz-exp");
+    const equipInp = document.getElementById("wiz-equip");
+    const traitsInp = document.getElementById("wiz-traits");
+    const notesInp = document.getElementById("wiz-notes");
+    if(expInp) wiz.experiences = expInp.value;
+    if(equipInp) wiz.equipment = equipInp.value;
+    if(traitsInp) wiz.traits = traitsInp.value;
+    if(notesInp) wiz.notes = notesInp.value;
+  }
+
+  const race = DATA.races.find(r=>r.id===wiz.raceId);
+  const cls = DATA.classes.find(c=>c.id===wiz.classId);
+  const isPhysical = cls ? cls.type==="Física" : true;
+
+  const attrs = {...wiz.attributes};
+  const raceBon = wizRaceBonus();
+  ATTR_KEYS.forEach(k=>{ attrs[k] = (wiz.attributes[k]||0) + (raceBon[k]||0); });
+
+  const obj = {
+    id: wizEditId || uid("p"),
+    name: wiz.name, race: race?race.name:"", class: cls?cls.name:"",
+    path: wiz.path, level: wiz.level,
+    attributes: attrs,
+    vida: null, vidaMax: null,
+    recurso: null, recursoMax: null,
+    lucidez: null, lucidezMax: null,
+    evasao: null,
+    experiences: String(wiz.experiences||"").split("\n").map(s=>s.trim()).filter(Boolean),
+    particularities: [...wiz.particularities],
+    equipment: wiz.equipment, traits: wiz.traits, notes: wiz.notes,
+    resourceName: cls?cls.resource:"Recurso"
+  };
+  autofillChar(obj, cls);
+
+  if(wizEditId){
+    const i = DATA.characters.findIndex(x=>x.id===wizEditId);
+    if(i>=0) DATA.characters[i]=obj;
+  } else {
+    DATA.characters.push(obj);
+  }
+  persist(); closeWizard(); renderPersonagens();
+  viewChar(obj.id);
+  showToast(wizEditId?"Personagem atualizado.":"Personagem criado com sucesso!");
+}
+
+/* ---------- Side Panel ---------- */
+function wizClearSide(){
+  const side = document.getElementById("wizardSide");
+  side.className = "wizard-side empty-side";
+  side.innerHTML = `<div class="wizard-side-empty"><span class="side-ico">📖</span>Selecione um item para ver<br>todos os detalhes aqui</div>`;
+}
+function wizShowRaceDetail(race){
+  const side = document.getElementById("wizardSide");
+  side.className = "wizard-side";
+  side.innerHTML = `<div class="wizard-side-content">
+    <h3>${race.name}</h3>
+    <span class="side-tag">Raça</span>
+    <div class="side-meta"><span>Bônus: <b>${race.bonus||"—"}</b></span></div>
+    ${race.appearance?`<div class="side-meta"><span>${race.appearance}</span></div>`:""}
+    <div class="side-identity">${race.identity||""}</div>
+    <div class="side-section">
+      <div class="side-section-title">Traços Marcantes</div>
+      ${(race.traits||[]).map(t=>`<div class="side-trait"><b>${t.name}</b>${t.desc?": "+t.desc:""}</div>`).join("")}
+    </div>
+  </div>`;
+}
+function wizShowClassDetail(cls){
+  const side = document.getElementById("wizardSide");
+  side.className = "wizard-side";
+  side.innerHTML = `<div class="wizard-side-content">
+    <h3>${cls.name}</h3>
+    <span class="side-tag ${cls.type==='Física'?'tag-fisica':'tag-magica'}">${cls.type}</span>
+    <div class="side-meta">
+      <span>Recurso: <b>${cls.resource} ${cls.resourceMax}</b></span>
+      <span>Lucidez: <b>${cls.lucidityMax}</b></span>
+    </div>
+    <div class="side-meta"><span>Atributos: <b>${cls.attrs||"—"}</b></span></div>
+    <div class="side-identity">${cls.identity||""}</div>
+    <div class="side-section">
+      <div class="side-section-title">Características</div>
+      ${(cls.features||[]).map(f=>`<div class="side-trait"><b>${f.name}</b>${f.desc?": "+f.desc:""}</div>`).join("")}
+    </div>
+    ${cls.impulse?`<div class="side-section"><div class="side-section-title">Impulso</div><div class="side-trait"><b>${cls.impulse.name}</b>: ${cls.impulse.desc}</div></div>`:""}
+    <div class="side-section">
+      <div class="side-section-title">Caminhos</div>
+      ${(cls.paths||[]).map(p=>`<div class="side-path"><b>${p.name}</b> — ${p.focus||""}<br><span style="color:var(--text-faint)">${p.areas||""}</span></div>`).join("")}
+    </div>
+  </div>`;
+}
+function wizShowFeatureDetail(item, isMagic){
+  const side = document.getElementById("wizardSide");
+  side.className = "wizard-side";
+  const metaHtml = isMagic
+    ? `<div class="side-meta">
+        <span>Classe: <b>${item.class}</b></span>
+        <span>Círculo: <b>${item.circle}</b></span>
+        <span>Nv. mín.: <b>${item.levelMin}</b></span>
+      </div>
+      <div class="side-meta">
+        <span>Custo: <b>${item.mana} Mana</b></span>
+        <span>Atributo: <b>${item.attr}</b></span>
+        <span>Alcance: <b>${item.range}</b></span>
+      </div>
+      ${item.damage?`<div class="side-meta"><span>Dano: <b>${item.damage}</b></span></div>`:""}`
+    : `<div class="side-meta">
+        <span>Classe: <b>${item.class}</b></span>
+        <span>Grau: <b>${item.grade}</b></span>
+        <span>Nv. mín.: <b>${item.levelMin}</b></span>
+      </div>
+      <div class="side-meta">
+        <span>Custo: <b>${item.prana} Prana</b></span>
+        <span>Atributo: <b>${item.attr}</b></span>
+        <span>Tipo: <b>${item.type}</b></span>
+      </div>`;
+  side.innerHTML = `<div class="wizard-side-content">
+    <h3>${item.name}</h3>
+    <span class="side-tag ${isMagic?'tag-magica':'tag-fisica'}">${isMagic?"Magia":"Técnica"}</span>
+    ${metaHtml}
+    <div class="side-identity">${item.effect||""}</div>
+    ${item.tool?`<div class="side-section"><div class="side-section-title">Ferramenta Recomendada</div><div class="side-trait">${item.tool}</div></div>`:""}
+  </div>`;
+}
+
+/* ---------- Wizard Field Helper ---------- */
+function wizField(label, id, value, opts={}){
+  const full = opts.full?"full":"";
+  value = value===undefined||value===null?"":value;
+  if(opts.textarea) return `<div class="field ${full}"><label>${label}</label><textarea class="input" id="${id}">${escapeHtml(value)}</textarea>${opts.hint?`<div class="hint">${opts.hint}</div>`:""}</div>`;
+  if(opts.select){
+    const opsHtml = opts.select.map(o=>`<option value="${o}" ${o==value?"selected":""}>${o}</option>`).join("");
+    return `<div class="field ${full}"><label>${label}</label><select class="input" id="${id}">${opsHtml}</select></div>`;
+  }
+  const type = opts.number?"number":"text";
+  return `<div class="field ${full}"><label>${label}</label><input class="input" type="${type}" id="${id}" value="${escapeHtml(value)}" ${opts.required?"required":""}>${opts.hint?`<div class="hint">${opts.hint}</div>`:""}</div>`;
 }
 </script>
 </body>
