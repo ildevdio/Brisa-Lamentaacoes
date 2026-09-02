@@ -161,7 +161,7 @@ function commAddForm(type){
     }
     <div class="field full"><label>Dano (ex: d6 MAG)</label><input class="input" name="damage"></div>
     <div class="field full"><label>Efeito / Descrição</label><textarea class="input" name="effect" required></textarea></div>
-    <div class="field full"><label>Senha de contribuidor</label><input class="input" type="password" name="password" required></div>
+    <div class="field full"><label>Senha de contribuidor</label><input class="input" type="password" name="password" placeholder="Digite a senha (solicitar)" required></div>
     <div class="hint full" style="grid-column:1/-1;">O item entra como <b>pendente</b>. O admin aprovará para todos verem.</div>`;
   openModal(meta.title, fields, async (fd)=>{
     try{
