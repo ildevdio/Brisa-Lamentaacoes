@@ -68,9 +68,12 @@ Além das mecânicas oficiais, o app permite que **jogadores proponham** novas m
    { "pending": [], "approved": [] }
    ```
 2. Copie o **ID do gist** (a parte de `gist.github.com/<seu-usuario>/`) para `COMMUNITY.GIST_ID` em `js/community.js`.
-3. Gere no GitHub um **Personal Access Token (classic)** com escopo **apenas `gist`** e cole em `COMMUNITY.GIST_TOKEN`.
+3. **Token via secret do GitHub Actions** (o token NUNCA fica no repositório):
+   - Gere no GitHub um **Personal Access Token (classic)** com escopo **apenas `gist`**.
+   - Adicione-o como um **secret** do repositório: `Settings → Secrets and variables → Actions → New repository secret`, nome `GIST_TOKEN`, valor = o token.
+   - O workflow `.github/workflows/pages.yml` injeta esse secret no lugar de `GIST_TOKEN_PLACEHOLDER` em `js/community.js` **só na hora do deploy**.
 4. Ajuste as senhas `PASSWORD_CONTRIB` (jogadores) e `PASSWORD_ADMIN` (você) e o arquivo `FILE_NAME`.
 
-> **Atenção à segurança:** o token fica **visível no código do app** (é o custo de permitir escrita direta no Gist). Use um token com escopo **só de gist**, nunca um token de repositório. Isso é aceitável para um grupo pequeno e de confiança; não é seguro para uso público aberto.
+> **Sobre segurança:** com esse esquema o token some do código e do histórico do git — vive apenas como secret. Porém, como o app é um site **estático**, quem abrir a página publicada ainda consegue ver o token injetado (é inevitável sem um servidor). Use um token com escopo **só de gist** e revogue/renove pelo secret se vazar. Para uso público aberto, o correto seria um intermediário de servidor (fora do escopo atual).
 
-> Se o Gist ainda não estiver configurado (IDs ainda com `COLE_...`), o app funciona normalmente só com as mecânicas oficiais — a aba de sugestões apenas fica vazia/sem escrita.
+> Se o token ainda não estiver configurado, o app funciona normalmente só com as mecânicas oficiais — a aba de sugestões apenas fica vazia/sem escrita em produção até o deploy injetar o secret.

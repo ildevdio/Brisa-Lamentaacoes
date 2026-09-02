@@ -26,11 +26,11 @@
    ===================================================================== */
 
 const COMMUNITY = {
-  GIST_ID         : "COLE_AQUI_O_ID_DO_GIST",
-  GIST_TOKEN      : "COLE_AQUI_O_TOKEN_DE_GIST",
+  GIST_ID         : "97517951a2eadc824fe54fc81868acd8",
+  GIST_TOKEN      : "GIST_TOKEN_PLACEHOLDER", // trocado pelo GitHub Actions (secret GIST_TOKEN)
   FILE_NAME       : "catalog-contrib.json",
-  PASSWORD_CONTRIB: "brisa",       // senha que o jogador usa para sugerir
-  PASSWORD_ADMIN  : "lamenca",     // senha para aprovar/rejeitar
+  PASSWORD_CONTRIB: "solicitar",       // senha que o jogador usa para sugerir
+  PASSWORD_ADMIN  : "aprovado",     // senha para aprovar/rejeitar
   CACHE_KEY       : "bel_comunidade_cache_v1"
 };
 

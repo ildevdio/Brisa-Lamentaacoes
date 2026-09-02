@@ -32,6 +32,12 @@ jobs:
           cp -R Livro_do_Jogador/* _site/
           cp game-data.json _site/game-data.json
 
+      # Mesma chave do placeholder deixado em js/community.js (GIST_TOKEN).
+      # O token em si nunca fica no repositório; vem do secret GIST_TOKEN.
+      - name: Injetar token de gist (secret) no app publicado
+        run: |
+          sed -i 's/GIST_TOKEN_PLACEHOLDER/${{ secrets.GIST_TOKEN }}/g' _site/js/community.js
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
