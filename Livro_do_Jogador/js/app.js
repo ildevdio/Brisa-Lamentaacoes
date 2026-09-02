@@ -89,6 +89,11 @@ async function boot(){
   }
   // mesmo sem mecânicas, renderiza as telas a partir do estado existente
   applyAll();
+  // catálogo compartilhado (magias/técnicas/ferramentas da comunidade)
+  try{
+    const comm = await loadCommunity();
+    if(comm){ commApply(); renderAll(); if(typeof renderSuggestions==="function") renderSuggestions(); }
+  }catch(e){ console.warn("Catálogo compartilhado indisponível.", e); }
 }
 
 function tryCache(){
@@ -565,6 +570,7 @@ function renderAll(){
   renderItems();
   renderParticularidades();
   renderReacoes();
+  if(typeof renderSuggestions==="function") renderSuggestions();
   renderPersonagens();
   updateStats();
 }

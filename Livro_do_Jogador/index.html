@@ -43,6 +43,7 @@
       <button class="tab-btn" data-tab="equipamentos"><span class="ico">▣</span> Equipamentos</button>
       <button class="tab-btn" data-tab="particularidades"><span class="ico">✦</span> Particularidades</button>
       <button class="tab-btn" data-tab="reacoes"><span class="ico">↯</span> Reações</button>
+      <button class="tab-btn" data-tab="sugestoes"><span class="ico">✦</span> Sugestões</button>
       <button class="tab-btn" data-tab="personagens"><span class="ico">☺</span> Personagens</button>
     </nav>
     <div class="sidebar-foot">
@@ -162,7 +163,7 @@
           <div class="section-title">Lista de Magias</div>
           <div class="section-desc">Lista base e modelo - não é exaustiva. Novas magias podem seguir a mesma estrutura de Círculo, Classe, custo de Mana e Atributo.</div>
         </div>
-        <div class="section-actions"></div>
+        <div class="section-actions"><button class="btn btn-primary" onclick="commAddForm('magia')">+ Adicionar magia</button></div>
       </div>
       <div class="toolbar">
         <div class="search-wrap"><input class="input" id="searchMagias" placeholder="Buscar magia..." oninput="renderSpells()"></div>
@@ -178,7 +179,7 @@
           <div class="section-title">Lista de Técnicas</div>
           <div class="section-desc">O equivalente físico das magias - habilidades marciais que consomem Prana, organizadas por Grau, Classe e Tipo.</div>
         </div>
-        <div class="section-actions"></div>
+        <div class="section-actions"><button class="btn btn-primary" onclick="commAddForm('tecnica')">+ Adicionar técnica</button></div>
       </div>
       <div class="toolbar">
         <div class="search-wrap"><input class="input" id="searchTecnicas" placeholder="Buscar técnica..." oninput="renderTechs()"></div>
@@ -194,7 +195,7 @@
           <div class="section-title">Equipamentos</div>
           <div class="section-desc">Armas, armaduras, ferramentas mágicas e consumíveis. Tier limita o que o personagem pode equipar (acompanha o nível).</div>
         </div>
-        <div class="section-actions"></div>
+        <div class="section-actions"><button class="btn btn-primary" onclick="commAddForm('ferramenta')">+ Adicionar ferramenta</button></div>
       </div>
       <div class="toolbar">
         <div class="search-wrap"><input class="input" id="searchItens" placeholder="Buscar item..." oninput="renderItems()"></div>
@@ -234,6 +235,17 @@
       <div class="grid" id="gridReacoes"></div>
     </section>
 
+    <!-- ================= SUGESTÕES (comunidade) ================= -->
+    <section class="section" id="tab-sugestoes">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Sugestões da Comunidade</div>
+          <div class="section-desc">Magias, técnicas e ferramentas enviadas pelos jogadores aguardando aprovação. Aprovar publica para todos; personagens continuam locais.</div>
+        </div>
+      </div>
+      <div class="grid" id="gridSugestoes"></div>
+    </section>
+
     <!-- ================= PERSONAGENS ================= -->
     <section class="section" id="tab-personagens">
       <div class="section-head">
@@ -257,6 +269,7 @@
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="js/community.js"></script>
 <script src="js/wizard.js"></script>
 <script src="js/app.js"></script>
 </body>
