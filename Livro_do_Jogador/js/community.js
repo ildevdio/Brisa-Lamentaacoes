@@ -394,6 +394,7 @@ function commPromptReject(id){
    RECARREGA a fila, re-aplica o merge, persiste e atualiza as telas.
    ===================================================================== */
 async function refreshCommunity(){
+  commApply();
   await loadCommunity();
   commApply();
   if(typeof persist==="function") persist();
