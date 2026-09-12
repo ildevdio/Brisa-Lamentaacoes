@@ -139,15 +139,16 @@ nav.tabs{display:flex;flex-direction:column;gap:2px;}
 .section-desc{color:var(--text-dim);font-size:14px;max-width:640px;margin-top:6px;}
 .section-actions{display:flex;gap:8px;flex-wrap:wrap;}
 
-.inv-picker{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text-dim);margin-bottom:14px;}
-.inv-picker .input{max-width:280px;}
-.inv-add{display:grid;grid-template-columns:150px 1fr 90px;gap:10px;align-items:end;margin-bottom:18px;padding:16px;background:var(--panel);border:1px solid var(--border-soft);border-radius:var(--radius-lg);}
-.inv-add .field{margin:0;}
-.inv-add .field.full{grid-column:1/-1;}
-.inv-add .btn{grid-column:1/-1;justify-self:start;}
-.inv-group{margin-bottom:20px;}
-.inv-group h3{font-size:12px;letter-spacing:.08em;color:var(--text-faint);margin:0 0 10px;text-transform:uppercase;display:flex;align-items:center;gap:8px;}
-.inv-group h3::after{content:"";flex:1;height:1px;background:var(--border-soft);}
+.inv-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}
+.inv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--bg-soft);border:1px solid var(--border-soft);border-radius:8px;padding:6px 10px;}
+.inv-row-info{display:flex;flex-direction:column;min-width:0;}
+.inv-row-info .inv-name{font-size:13px;color:var(--text);font-weight:600;}
+.inv-row-info .inv-detail{font-size:11px;color:var(--text-faint);}
+.inv-row-actions{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+.inv-row-actions .inv-qty{font-size:12px;color:var(--text-dim);margin-right:4px;}
+.inv-row-actions .btn{padding:3px 8px;font-size:12px;}
+.inv-add-sheet{display:flex;gap:6px;align-items:center;}
+.inv-add-sheet .btn{padding:6px 12px;}
 
 /* ---------- Buttons ---------- */
 .btn{
@@ -463,7 +464,6 @@ nav.tabs{display:flex;flex-direction:column;gap:2px;}
       <button class="tab-btn" data-tab="reacoes"><span class="ico">↯</span> Reações</button>
       <button class="tab-btn" data-tab="sugestoes"><span class="ico">✉</span> Sugestões</button>
       <button class="tab-btn" data-tab="personagens"><span class="ico">☺</span> Personagens</button>
-      <button class="tab-btn" data-tab="inventario"><span class="ico">▤</span> Inventário</button>
     </nav>
     <div class="sidebar-foot">
       <button class="mini-btn" id="btnExport">⇩ Exportar dados (.json)</button>
@@ -678,38 +678,6 @@ nav.tabs{display:flex;flex-direction:column;gap:2px;}
         <div class="char-grid" id="gridPersonagens"></div>
       </div>
       <div id="charSheetWrap"></div>
-    </section>
-
-    <section class="section" id="tab-inventario">
-      <div class="section-head">
-        <div>
-          <div class="section-title">Inventário</div>
-          <div class="section-desc">Ferramentas e itens que o personagem carrega. Escolha quem e digite um novo item para adicioná-lo à bolsa.</div>
-        </div>
-      </div>
-      <div class="inv-picker">
-        <label for="invCharSelect">Personagem</label>
-        <select class="input" id="invCharSelect"></select>
-      </div>
-      <form id="invAddForm" class="inv-add">
-        <div class="field"><label>Tipo</label>
-          <select class="input" name="kind">
-            <option value="Ferramenta">Ferramenta</option>
-            <option value="Item">Item</option>
-          </select>
-        </div>
-        <div class="field"><label>Nome</label>
-          <input class="input" type="text" name="name" placeholder="Digite o nome do item" required>
-        </div>
-        <div class="field"><label>Qtde</label>
-          <input class="input" type="number" name="qty" value="1" min="1">
-        </div>
-        <div class="field full"><label>Detalhes (opcional)</label>
-          <input class="input" type="text" name="detail" placeholder="ex: corda de 15m, poção de cura +2…">
-        </div>
-        <button class="btn btn-primary" type="submit">+ Adicionar item</button>
-      </form>
-      <div id="invListWrap"></div>
     </section>
 
   </main>
@@ -1122,7 +1090,6 @@ document.getElementById("tabNav").addEventListener("click",(e)=>{
   document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
   document.getElementById("tab-"+btn.dataset.tab).classList.add("active");
   if(btn.dataset.tab==="sugestoes" && typeof renderSuggestions==="function") renderSuggestions();
-  if(btn.dataset.tab==="inventario") renderInventario();
 });
 
 /* =====================================================================
@@ -1586,7 +1553,7 @@ function openCharForm(id){
     // preenche automaticamente o que ficou vazio
     autofillChar(obj, cls);
     if(id){ const i=DATA.characters.findIndex(x=>x.id===id); DATA.characters[i]=obj; } else DATA.characters.push(obj);
-    persist(); closeModal(); renderPersonagens(); renderInventario();
+    persist(); closeModal(); renderPersonagens();
     if(id) viewChar(id); else viewChar(obj.id);
     showToast(id?"Personagem atualizado.":"Personagem criado.");
   });
@@ -1655,7 +1622,7 @@ function viewChar(id){
         </div>
         <div>
           <div class="res-block"><h4>EQUIPAMENTO</h4><div class="notes-box">${p.equipment||"—"}</div></div>
-          ${invSheetHtml(p)?`<div class="res-block"><h4>INVENTÁRIO</h4>${invSheetHtml(p)}</div>`:""}
+          <div class="res-block"><h4>INVENTÁRIO</h4>${invListHtml(p)}</div>
           <div class="res-block"><h4>TRAÇOS &amp; CARACTERÍSTICAS</h4><div class="notes-box">${p.traits||"—"}</div></div>
           <div class="res-block"><h4>IDENTIDADE / ANOTAÇÕES</h4><div class="notes-box">${p.notes||"—"}</div></div>
         </div>
@@ -1668,93 +1635,65 @@ function deleteChar(id){
   if(!confirm("Remover este personagem? Essa ação não pode ser desfeita.")) return;
   DATA.characters = DATA.characters.filter(x=>x.id!==id);
   currentCharId=null;
-  persist(); renderPersonagens(); renderInventario();
+  persist(); renderPersonagens();
   showToast("Personagem removido.");
 }
 
 /* =====================================================================
-   INVENTÁRIO POR PERSONAGEM
+   INVENTÁRIO NA FICHA DO PERSONAGEM
    ===================================================================== */
-function invSelectedChar(){
-  const sel = document.getElementById("invCharSelect");
-  return DATA.characters.find(x=>x.id===sel.value);
+function invListHtml(p){
+  const inv = Array.isArray(p.inventory)?p.inventory:[];
+  const rows = inv.length ? inv.map(i=>`
+    <div class="inv-row">
+      <div class="inv-row-info">
+        <span class="inv-name">${escapeHtml(i.name)} <span class="inv-detail" style="color:var(--text-dim);font-weight:400;">· ${escapeHtml(i.kind||"Item")}</span></span>
+        ${i.detail?`<span class="inv-detail">${escapeHtml(i.detail)}</span>`:""}
+      </div>
+      <div class="inv-row-actions">
+        <span class="inv-qty">×${i.qty}</span>
+        <button class="btn btn-sm" onclick="invQty('${p.id}','${i.id}',-1)" title="Diminuir quantidade">−</button>
+        <button class="btn btn-sm" onclick="invQty('${p.id}','${i.id}',1)" title="Aumentar quantidade">+</button>
+        <button class="btn btn-sm" onclick="invEdit('${p.id}','${i.id}')" title="Editar item">✎</button>
+        <button class="btn btn-sm btn-danger" onclick="invRemove('${p.id}','${i.id}')" title="Remover item">×</button>
+      </div>
+    </div>`).join("") : `<div class="notes-box" style="min-height:auto;">Nenhum item carregado.</div>`;
+  return `<div class="inv-list">${rows}</div>
+    <div class="inv-add-sheet">
+      <select class="input" id="inv-kind-${p.id}" style="width:130px;flex-shrink:0;">
+        <option value="Item">Item</option>
+        <option value="Ferramenta">Ferramenta</option>
+      </select>
+      <input class="input" type="text" id="inv-name-${p.id}" placeholder="Digite um novo item…" style="flex:1;min-width:0;">
+      <input class="input" type="number" id="inv-qty-${p.id}" value="1" min="1" style="width:66px;flex-shrink:0;">
+      <button class="btn btn-sm btn-primary" onclick="invAdd('${p.id}')">+</button>
+    </div>`;
 }
-function renderInventario(){
-  const sel = document.getElementById("invCharSelect");
-  const prev = sel.value;
-  sel.innerHTML = DATA.characters.map(c=>`<option value="${c.id}">${escapeHtml(c.name||"Sem nome")}</option>`).join("");
-  if(prev && DATA.characters.some(c=>c.id===prev)) sel.value = prev;
-  else if(DATA.characters[0]) sel.value = DATA.characters[0].id;
-  renderInvList();
-}
-function renderInvList(){
-  const wrap = document.getElementById("invListWrap");
-  const p = invSelectedChar();
-  if(!p){
-    wrap.innerHTML = emptyState(
-      "Nenhum personagem criado ainda. Crie um para gerenciar o inventário dele.",
-      "openCharForm()");
-    return;
-  }
-  if(!Array.isArray(p.inventory)) p.inventory = [];
-  const groups = [
-    {kind:"Ferramenta", label:"Ferramentas", empty:"Nenhuma ferramenta na bolsa."},
-    {kind:"Item", label:"Itens", empty:"Nenhum item na bolsa."}
-  ];
-  wrap.innerHTML = groups.map(g=>{
-    const items = p.inventory.filter(x=>x.kind===g.kind);
-    const cards = items.length
-      ? items.map(x=>invCardHtml(p, x)).join("")
-      : `<div class="empty-state" style="grid-column:1/-1;">${g.empty}</div>`;
-    return `<div class="inv-group"><h3>${g.label}</h3><div class="grid">${cards}</div></div>`;
-  }).join("");
-}
-function invCardHtml(p, x){
-  return `<div class="card">
-    <div class="card-top">
-      <div class="card-title">${escapeHtml(x.name)}</div>
-      <div class="card-tag">× ${x.qty}</div>
-    </div>
-    ${x.detail?`<div class="card-body">${escapeHtml(x.detail)}</div>`:""}
-    <div class="card-foot">
-      <button class="btn btn-sm" onclick="invQty('${p.id}','${x.id}',-1)" title="Diminuir quantidade">−</button>
-      <button class="btn btn-sm" onclick="invQty('${p.id}','${x.id}',1)" title="Aumentar quantidade">+</button>
-      <button class="btn btn-sm" onclick="invEdit('${p.id}','${x.id}')">Editar</button>
-      <button class="btn btn-sm btn-danger" onclick="invRemove('${p.id}','${x.id}')">Remover</button>
-    </div>
-  </div>`;
-}
-function invAddItem(e){
-  e.preventDefault();
-  const p = invSelectedChar();
-  if(!p) return;
-  const fd = new FormData(e.target);
-  const name = fd.get("name").trim();
+function invGetChar(charId){ return DATA.characters.find(x=>x.id===charId); }
+function invAdd(charId){
+  const p = invGetChar(charId); if(!p) return;
+  const nameInp = document.getElementById("inv-name-"+charId);
+  const name = nameInp.value.trim();
   if(!name) return;
+  const kind = document.getElementById("inv-kind-"+charId).value;
+  const qty = document.getElementById("inv-qty-"+charId).value;
   if(!Array.isArray(p.inventory)) p.inventory = [];
-  p.inventory.push({
-    id: uid("it"),
-    kind: fd.get("kind"),
-    name,
-    qty: Math.max(1, Number(fd.get("qty"))||1),
-    detail: fd.get("detail").trim()
-  });
-  persist(); renderInvList(); showToast("Item adicionado ao inventário.");
-  e.target.reset();
+  p.inventory.push({ id: uid("it"), kind, name, qty: Math.max(1, Number(qty)||1), detail: "" });
+  persist(); viewChar(charId); showToast("Item adicionado ao inventário.");
 }
 function invQty(charId, itemId, delta){
-  const p = DATA.characters.find(x=>x.id===charId);
+  const p = invGetChar(charId); if(!p) return;
   const it = (p.inventory||[]).find(i=>i.id===itemId);
   if(!it) return;
   it.qty = Math.max(1, (it.qty||1) + delta);
-  persist(); renderInvList(); showToast("Quantidade atualizada.");
+  persist(); viewChar(charId); showToast("Quantidade atualizada.");
 }
 function invEdit(charId, itemId){
-  const p = DATA.characters.find(x=>x.id===charId);
+  const p = invGetChar(charId); if(!p) return;
   const it = (p.inventory||[]).find(i=>i.id===itemId);
   if(!it) return;
   const body = `<div class="form-grid">
-    ${field("Tipo","kind",it.kind,{select:["Ferramenta","Item"]})}
+    ${field("Tipo","kind",it.kind,{select:["Item","Ferramenta"]})}
     ${field("Nome","name",it.name,{required:true})}
     ${field("Quantidade","qty",it.qty,{number:true})}
     ${field("Detalhes","detail",it.detail,{full:true})}
@@ -1764,26 +1703,15 @@ function invEdit(charId, itemId){
     it.name = fd.get("name").trim();
     it.qty = Math.max(1, Number(fd.get("qty"))||1);
     it.detail = fd.get("detail").trim();
-    persist(); renderInvList(); showToast("Item atualizado.");
+    persist(); viewChar(charId); showToast("Item atualizado.");
   });
 }
 function invRemove(charId, itemId){
   if(!confirm("Remover este item do inventário?")) return;
-  const p = DATA.characters.find(x=>x.id===charId);
+  const p = invGetChar(charId); if(!p) return;
   p.inventory = (p.inventory||[]).filter(i=>i.id!==itemId);
-  persist(); renderInvList(); showToast("Item removido do inventário.");
+  persist(); viewChar(charId); showToast("Item removido do inventário.");
 }
-function invSheetHtml(p){
-  const inv = Array.isArray(p.inventory)?p.inventory:[];
-  if(inv.length===0) return "";
-  return ["Ferramenta","Item"].map(kind=>{
-    const list = inv.filter(i=>i.kind===kind);
-    if(list.length===0) return "";
-    return `<div class="tag-row" style="margin-bottom:6px;">${list.map(i=>`<span class="tagpill" title="${escapeHtml(i.detail||"")}">${escapeHtml(i.name)} ×${i.qty}</span>`).join("")}</div>`;
-  }).join("");
-}
-document.getElementById("invAddForm").addEventListener("submit", invAddItem);
-document.getElementById("invCharSelect").addEventListener("change", renderInvList);
 
 /* =====================================================================
    UTILITÁRIOS COMUNS
@@ -1869,7 +1797,6 @@ function renderAll(){
   renderParticularidades();
   renderReacoes();
   renderPersonagens();
-  renderInventario();
   updateStats();
 }
 renderAll();
@@ -2468,7 +2395,7 @@ function wizSave(){
   } else {
     DATA.characters.push(obj);
   }
-  persist(); closeWizard(); renderPersonagens(); renderInventario();
+  persist(); closeWizard(); renderPersonagens();
   viewChar(obj.id);
   showToast(wizEditId?"Personagem atualizado.":"Personagem criado com sucesso!");
 }
