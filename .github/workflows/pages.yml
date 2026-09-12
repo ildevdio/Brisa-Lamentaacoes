@@ -37,6 +37,7 @@ jobs:
       - name: Injetar token de gist (secret) no app publicado
         run: |
           sed -i 's/GIST_TOKEN_PLACEHOLDER/${{ secrets.GIST_TOKEN }}/g' _site/js/community.js
+          rm -f _site/js/community.local.js
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

@@ -5,3 +5,6 @@ Thumbs.db
 # Dependências/artefatos (se usados futuramente)
 node_modules/
 *.log
+
+# Token local de desenvolvimento (NUNCA versionar)
+Livro_do_Jogador/js/community.local.js
