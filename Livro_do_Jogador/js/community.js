@@ -84,7 +84,7 @@ function commApply(){
     ferramenta     : (it)=>{ if(!data.items)            data.items=[];            it.forEach(x=>{ if(!data.items.some(s=>s.id===x.id))            data.items.push(x); }); },
     raca           : (it)=>{ if(!data.races)            data.races=[];            it.forEach(x=>{ if(!data.races.some(s=>s.id===x.id))            data.races.push(x); }); },
     classe         : (it)=>{ if(!data.classes)          data.classes=[];          it.forEach(x=>{ if(!data.classes.some(s=>s.id===x.id))          data.classes.push(x); }); },
-    particularidade: (it)=>{ if(!data.particularidades) data.particularidades=[]; it.forEach(x=>{ if(!data.particularidades.some(s=>s.id===x.id)) data.particularidades.push(x); }); }
+    particularidade: (it)=>{ if(!data.particularities) data.particularities=[]; it.forEach(x=>{ if(!data.particularities.some(s=>s.id===x.id)) data.particularities.push(x); }); }
   };
   for(const a of commApproved()){
     if(target[a.type]) target[a.type]([a.data]);
