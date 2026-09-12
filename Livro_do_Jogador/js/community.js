@@ -46,7 +46,7 @@ async function loadCommunity(){
   try{
     const id = COMMUNITY.GIST_ID;
     if(!id || id.startsWith("COLE")) return false;
-    const url = "https://gist.githubusercontent.com/raw/" + encodeURIComponent(id) + "/" + encodeURIComponent(COMMUNITY.FILE_NAME);
+    const url = "https://gist.githubusercontent.com/raw/" + encodeURIComponent(id) + "/" + encodeURIComponent(COMMUNITY.FILE_NAME) + "?ts=" + Date.now();
     const res = await fetch(url, { cache:"no-store" });
     if(!res.ok) throw new Error("HTTP "+res.status);
     const data = await res.json();
