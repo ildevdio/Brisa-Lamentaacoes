@@ -98,7 +98,7 @@ function commApply(){
 async function commWrite(newComm){
   const id  = COMMUNITY.GIST_ID;
   const tok = COMMUNITY.GIST_TOKEN;
-  if(!id || !tok || id.startsWith("COLE") || tok.startsWith("COLE") || tok === "GIST_TOKEN_PLACEHOLDER")
+  if(!id || !tok || id.startsWith("COLE") || tok.startsWith("COLE") || tok.startsWith("GIST_TOKEN_"))
     throw new Error("Gist não configurado.");
   const payload = {
     description: "Brisa e Lamentações - catálogo compartilhado",
