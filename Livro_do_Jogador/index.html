@@ -374,10 +374,15 @@ nav.tabs{display:flex;flex-direction:column;gap:2px;}
 .wizard-side-content .side-path b{color:var(--brisa);}
 .wizard-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
 .wizard-head h2{font-family:var(--font-display);font-size:19px;margin:0;}
-.wizard-steps{display:flex;gap:4px;margin-bottom:18px;}
-.wizard-step-dot{width:10px;height:10px;border-radius:50%;background:var(--border);transition:background .2s;}
+.wizard-steps{display:flex;gap:2px;margin-bottom:18px;align-items:flex-start;flex-wrap:wrap;}
+.wizard-step{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:52px;cursor:pointer;padding:4px 2px;border-radius:6px;transition:background .15s;}
+.wizard-step:hover{background:var(--panel);}
+.wizard-step-dot{width:12px;height:12px;border-radius:50%;background:var(--border);transition:background .2s;border:none;padding:0;}
 .wizard-step-dot.active{background:var(--brisa);}
 .wizard-step-dot.done{background:var(--good);}
+.wizard-step-label{font-size:9.5px;color:var(--text-faint);letter-spacing:.02em;text-align:center;line-height:1.2;text-transform:uppercase;}
+.wizard-step.active .wizard-step-label{color:var(--brisa);font-weight:600;}
+.wizard-steps-hint{font-size:10.5px;color:var(--text-faint);margin:-10px 0 14px;}
 .wizard-body{flex:1;overflow-y:auto;padding-right:4px;}
 .wizard-body::-webkit-scrollbar{width:6px;}
 .wizard-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px;}
@@ -722,6 +727,7 @@ nav.tabs{display:flex;flex-direction:column;gap:2px;}
           <button class="modal-close" onclick="closeWizard()">&times;</button>
         </div>
         <div class="wizard-steps" id="wizardDots"></div>
+        <div class="wizard-steps-hint">Clique em um passo para pular etapas.</div>
         <div class="wizard-body" id="wizardBody"></div>
         <div class="wizard-nav" id="wizardNav"></div>
       </div>
@@ -1998,8 +2004,12 @@ function renderWizardStep(){
   const dots = document.getElementById("wizardDots");
   const nav = document.getElementById("wizardNav");
   const steps = 8;
+  const stepNames = ["Identidade","Raça","Classe","Atributos","Magias/Téc.","Armas","Armadura","Experiência"];
   dots.innerHTML = Array.from({length:steps},(_, i)=>
-    `<div class="wizard-step-dot ${i===wiz.step?'active':(i<wiz.step?'done':'')}"></div>`
+    `<div class="wizard-step ${i===wiz.step?'active':''}" onclick="wizGoTo(${i})" title="Pular para: ${stepNames[i]}">
+      <div class="wizard-step-dot ${i===wiz.step?'active':(i<wiz.step?'done':'')}"></div>
+      <span class="wizard-step-label">${stepNames[i]}</span>
+    </div>`
   ).join("");
 
   let html = "";
@@ -2025,8 +2035,8 @@ function renderWizardStep(){
   wizClearSide();
 }
 
-function wizPrevStep(){ wiz.step--; renderWizardStep(); }
-function wizNextStep(){
+function wizPrevStep(){ wizSyncCurrentStep(); wiz.step--; renderWizardStep(); }
+function wizSyncCurrentStep(){
   if(wiz.step === 0){
     const nameInp = document.getElementById("wiz-name");
     const pathInp = document.getElementById("wiz-path");
@@ -2052,6 +2062,14 @@ function wizNextStep(){
   if(wiz.step === 7){
     wizSyncExpPartFromInputs();
   }
+}
+function wizGoTo(step){
+  wizSyncCurrentStep();
+  wiz.step = Math.max(0, Math.min(step, 7));
+  renderWizardStep();
+}
+function wizNextStep(){
+  wizSyncCurrentStep();
   wiz.step++;
   renderWizardStep();
 }
