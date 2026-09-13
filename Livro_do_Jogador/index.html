@@ -1394,10 +1394,11 @@ function renderItems(){
   if(list.length===0){ wrap.innerHTML = emptyState("Nenhum item encontrado.", "commAddForm('ferramenta')"); updateStats(); return; }
   wrap.innerHTML = list.map(i=>`
     <div class="card">
-      <div class="card-top"><div class="card-title">${i.name}</div><div class="card-tag">Tier ${i.tier}</div></div>
+      <div class="card-top"><div class="card-title">${i.name}</div><div class="card-tag ${i.custom?'tag-custom':''}">${i.custom?"Comunidade":"Tier "+i.tier}</div></div>
       <div class="card-meta"><span><b>${i.category}</b></span>
         ${i.attr?`<span>Traço: <b>${i.attr}</b></span>`:""}
         ${i.range?`<span>Alcance: <b>${i.range}</b></span>`:""}
+        ${i.submittedBy?`<span>Por: <b>${i.submittedBy}</b></span>`:""}
       </div>
       ${i.damage?`<div class="card-meta"><span>Dano: <b>${i.damage} ${i.dtype||""}</b></span>${i.burden?`<span>Burden: <b>${i.burden}</b></span>`:""}</div>`:""}
       <div class="card-body">${i.desc||""}${i.feature?`<br><b style="color:var(--text)">Feature:</b> ${i.feature}`:""}</div>

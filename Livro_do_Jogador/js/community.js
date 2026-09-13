@@ -78,16 +78,32 @@ function persistCommunity(c){ try{ localStorage.setItem(COMMUNITY.CACHE_KEY, JSO
 function commApply(){
   const data = DATA;
   if(!data) return;
+  const mergeInto = (list, x)=>{
+    const existing = list.find(s=>s.id===x.id);
+    if(existing){
+      // Já mesclado (cópia antiga no localStorage): garante o marcador de origem.
+      if(existing.custom === undefined) existing.custom = true;
+      if(x.submittedBy && !existing.submittedBy) existing.submittedBy = x.submittedBy;
+      if(x.approvedAt && !existing.approvedAt) existing.approvedAt = x.approvedAt;
+      return;
+    }
+    x.custom = true;
+    list.push(x);
+  };
   const target = {
-    magia          : (it)=>{ if(!data.spells)           data.spells=[];           it.forEach(x=>{ if(!data.spells.some(s=>s.id===x.id))           data.spells.push(x); }); },
-    tecnica        : (it)=>{ if(!data.techniques)       data.techniques=[];       it.forEach(x=>{ if(!data.techniques.some(s=>s.id===x.id))       data.techniques.push(x); }); },
-    ferramenta     : (it)=>{ if(!data.items)            data.items=[];            it.forEach(x=>{ if(!data.items.some(s=>s.id===x.id))            data.items.push(x); }); },
-    raca           : (it)=>{ if(!data.races)            data.races=[];            it.forEach(x=>{ if(!data.races.some(s=>s.id===x.id))            data.races.push(x); }); },
-    classe         : (it)=>{ if(!data.classes)          data.classes=[];          it.forEach(x=>{ if(!data.classes.some(s=>s.id===x.id))          data.classes.push(x); }); },
-    particularidade: (it)=>{ if(!data.particularities) data.particularities=[]; it.forEach(x=>{ if(!data.particularities.some(s=>s.id===x.id)) data.particularities.push(x); }); }
+    magia          : (it)=>{ if(!data.spells)           data.spells=[];           it.forEach(x=>mergeInto(data.spells, x)); },
+    tecnica        : (it)=>{ if(!data.techniques)       data.techniques=[];       it.forEach(x=>mergeInto(data.techniques, x)); },
+    ferramenta     : (it)=>{ if(!data.items)            data.items=[];            it.forEach(x=>mergeInto(data.items, x)); },
+    raca           : (it)=>{ if(!data.races)            data.races=[];            it.forEach(x=>mergeInto(data.races, x)); },
+    classe         : (it)=>{ if(!data.classes)          data.classes=[];          it.forEach(x=>mergeInto(data.classes, x)); },
+    particularidade: (it)=>{ if(!data.particularities) data.particularities=[]; it.forEach(x=>mergeInto(data.particularities, x)); }
   };
   for(const a of commApproved()){
-    if(target[a.type]) target[a.type]([a.data]);
+    const item = a && a.data;
+    if(!item || !target[a.type]) continue;
+    item.submittedBy = item.submittedBy || a.submittedBy || "";
+    item.approvedAt  = item.approvedAt  || a.approvedAt || "";
+    target[a.type]([item]);
   }
 }
 
