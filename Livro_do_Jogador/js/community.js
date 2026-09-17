@@ -218,7 +218,7 @@ function commAddForm(type){
       ${passField}${hintField}</div>`,
 
     ferramenta:()=>`<div class="form-grid">${nameField}${playerNameField}
-      ${field("Categoria","category","Arma",{select:["Arma","Armadura","Ferramenta Mágica","Item Mágico","Consumível"]})}
+      ${field("Categoria","category","Arma",{select:["Arma","Armadura","Escudo","Ferramenta Mágica","Item Mágico","Consumível"]})}
       ${field("Tier (1-7)","tier","1",{number:true})}
       ${field("Traço/Atributo","attr","")}
       ${field("Alcance","range","",{select:["",...rangeSel]})}
