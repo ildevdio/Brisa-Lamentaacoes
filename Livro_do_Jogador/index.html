@@ -590,6 +590,9 @@ a{color:#c9a46d;}
 .bel-sidebar-foot .mini-btn .nav-label{display:none;}
 .bel-sidebar.expanded .bel-sidebar-foot .mini-btn .nav-label{display:inline;}
 
+.bel-dock-panel{display:contents;}
+.bel-dock-strip{display:none;}
+
 .workspace{
   width:calc(100% - 64px);margin-left:64px;min-width:0;
   display:flex;flex-direction:column;min-height:100vh;
@@ -706,19 +709,75 @@ a{color:#c9a46d;}
 .footer-note{border-color:#403329;}
 
 @media(max-width:900px){
-  .bel-sidebar{position:fixed;width:100%;height:58px;min-width:0;bottom:auto;right:0;padding:7px 10px;flex-direction:row;align-items:center;overflow:visible;}
-  .bel-sidebar.expanded{width:100%;min-width:0;}
-  .bel-brand{padding:0;margin-right:4px;}
-  .brand-copy{display:none;}
-  .bel-nav{flex:1;overflow-x:auto;display:flex;flex-direction:row;gap:3px;}
-  .bel-nav .tab-btn{width:42px;min-width:42px;justify-content:center;}
-  .bel-nav .tab-btn .nav-label{display:none!important;}
-  .bel-sidebar-foot{margin:0 0 0 auto;flex-direction:row;}
-  .bel-sidebar-foot .mini-btn{min-width:34px;width:34px;justify-content:center;}
-  .bel-sidebar-foot .mini-btn .nav-label{display:none!important;}
-  .workspace,.workspace.sidebar-expanded{width:100%;margin-left:0;padding-top:58px;}
+  /* Menu lateral vira uma dock de navegador, fixa na base. */
+  .bel-sidebar{
+    position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));top:auto;
+    width:auto;min-width:0;height:auto;
+    padding:calc(8px + env(safe-area-inset-bottom,0px)) 10px 8px;
+    flex-direction:row;align-items:center;gap:8px;
+    border:1px solid rgba(201,185,152,.22);border-radius:17px;
+    overflow:visible;z-index:70;
+    background:linear-gradient(180deg,#2a2018,#171009);
+    box-shadow:0 14px 34px rgba(0,0,0,.55);
+  }
+  .bel-sidebar.expanded{width:auto;min-width:0;}
+  .bel-brand{display:none;}
+  .bel-dock-panel{display:none;}
+  .bel-sidebar.dock-open .bel-dock-panel{
+    display:flex;flex-direction:column;gap:11px;
+    position:absolute;left:0;right:0;top:auto;bottom:calc(100% + 10px);
+    max-height:min(68vh,560px);overflow-y:auto;
+    padding:12px;border:1px solid rgba(201,185,152,.24);border-radius:16px;
+    background:linear-gradient(180deg,#241b14,#171009);
+    box-shadow:0 20px 46px rgba(0,0,0,.55);
+  }
+
+  /* Abas abertas na própria dock */
+  .bel-dock-strip{display:flex;align-items:center;gap:7px;flex:1;min-width:0;}
+  .bel-dock-tabs{flex:1;min-width:0;display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;}
+  .bel-dock-tabs::-webkit-scrollbar{display:none;}
+  .dock-tab{
+    position:relative;display:flex;align-items:center;gap:6px;
+    max-width:150px;min-width:0;flex-shrink:0;
+    padding:6px 8px 6px 11px;border-radius:10px;
+    background:#2b2119;border:1px solid #4a3a2b;
+    color:#aa9a83;font-size:12px;cursor:pointer;white-space:nowrap;
+  }
+  .dock-tab .tab-icon{color:#a68b64;font-size:13px;}
+  .dock-tab .tab-name{overflow:hidden;text-overflow:ellipsis;}
+  .dock-tab .tab-close{border:0;background:transparent;color:#716451;cursor:pointer;padding:1px 3px;border-radius:5px;font-size:15px;line-height:1;}
+  .dock-tab .tab-close:hover{background:#47382a;color:#e9dcc5;}
+  .dock-tab.active{background:#382a1e;border-color:#9c7443;color:#f0dfc0;}
+  .dock-tab.active .tab-icon{color:#d3ad73;}
+  .bel-dock-ctl{
+    width:38px;min-width:38px;height:38px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    border:1px solid #4a3a2b;border-radius:11px;background:#241b14;
+    color:#b7a98f;font-size:16px;cursor:pointer;
+  }
+  .bel-dock-ctl:hover{background:#33281d;color:#e8d9bb;}
+  .bel-dock-ctl.bel-dock-new{border-color:#70552f;color:#d3ad73;font-size:19px;}
+
+  /* Visão geral (painel que sobe: todas as seções + utilidades) */
+  .bel-sidebar.dock-open .bel-nav{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+  .bel-sidebar.dock-open .bel-nav .tab-btn{
+    flex-direction:column;gap:5px;justify-content:center;text-align:center;
+    padding:12px 6px;min-height:64px;
+  }
+  .bel-sidebar.dock-open .bel-nav .tab-btn .ico{width:auto;font-size:19px;}
+  .bel-sidebar.dock-open .bel-nav .tab-btn .nav-label{display:block;font-size:11px;line-height:1.15;}
+  .bel-sidebar.dock-open .bel-sidebar-foot{flex-direction:row;flex-wrap:wrap;gap:6px;margin:0;}
+  .bel-sidebar.dock-open .bel-sidebar-foot .mini-btn{
+    flex:1;min-width:96px;justify-content:center;text-align:center;
+  }
+  .bel-sidebar.dock-open .bel-sidebar-foot .mini-btn .nav-label{display:inline;}
+
+  .workspace,.workspace.sidebar-expanded{
+    width:100%;margin-left:0;padding-top:0;
+    padding-bottom:calc(66px + env(safe-area-inset-bottom,0px));
+  }
   .app-header{display:none;}
-  .app-tabs{height:39px;min-height:39px;}
+  .app-tabs{display:none;}
   .main{padding:18px 13px 45px;}
 }
 @media(max-width:650px){
@@ -1103,26 +1162,34 @@ a{color:#c9a46d;}
       </div>
     </div>
 
-    <nav class="tabs bel-nav" id="tabNav" aria-label="Navegação principal">
-      <button class="tab-btn active" data-tab="inicio" title="Início"><span class="ico">⌂</span><span class="nav-label">Início</span></button>
-      <button class="tab-btn" data-tab="mecanicas" title="Mecânicas"><span class="ico">◈</span><span class="nav-label">Mecânicas</span></button>
-      <button class="tab-btn" data-tab="racas" title="Raças"><span class="ico">♜</span><span class="nav-label">Raças</span></button>
-      <button class="tab-btn" data-tab="classes" title="Classes e Caminhos"><span class="ico">⚔</span><span class="nav-label">Classes &amp; Caminhos</span></button>
-      <button class="tab-btn" data-tab="progressao" title="Progressão"><span class="ico">↗</span><span class="nav-label">Progressão</span></button>
-      <button class="tab-btn" data-tab="magias" title="Magias"><span class="ico">✧</span><span class="nav-label">Magias</span></button>
-      <button class="tab-btn" data-tab="tecnicas" title="Técnicas"><span class="ico">✺</span><span class="nav-label">Técnicas</span></button>
-      <button class="tab-btn" data-tab="equipamentos" title="Equipamentos"><span class="ico">▣</span><span class="nav-label">Equipamentos</span></button>
-      <button class="tab-btn" data-tab="particularidades" title="Particularidades"><span class="ico">✦</span><span class="nav-label">Particularidades</span></button>
-      <button class="tab-btn" data-tab="reacoes" title="Reações"><span class="ico">↯</span><span class="nav-label">Reações</span></button>
-      <button class="tab-btn" data-tab="sugestoes" title="Sugestões"><span class="ico">✉</span><span class="nav-label">Sugestões</span></button>
-      <button class="tab-btn" data-tab="personagens" title="Personagens"><span class="ico">♙</span><span class="nav-label">Personagens</span></button>
-    </nav>
+    <div class="bel-dock-panel" id="dockPanel">
+      <nav class="tabs bel-nav" id="tabNav" aria-label="Navegação principal">
+        <button class="tab-btn active" data-tab="inicio" title="Início"><span class="ico">⌂</span><span class="nav-label">Início</span></button>
+        <button class="tab-btn" data-tab="mecanicas" title="Mecânicas"><span class="ico">◈</span><span class="nav-label">Mecânicas</span></button>
+        <button class="tab-btn" data-tab="racas" title="Raças"><span class="ico">♜</span><span class="nav-label">Raças</span></button>
+        <button class="tab-btn" data-tab="classes" title="Classes e Caminhos"><span class="ico">⚔</span><span class="nav-label">Classes &amp; Caminhos</span></button>
+        <button class="tab-btn" data-tab="progressao" title="Progressão"><span class="ico">↗</span><span class="nav-label">Progressão</span></button>
+        <button class="tab-btn" data-tab="magias" title="Magias"><span class="ico">✧</span><span class="nav-label">Magias</span></button>
+        <button class="tab-btn" data-tab="tecnicas" title="Técnicas"><span class="ico">✺</span><span class="nav-label">Técnicas</span></button>
+        <button class="tab-btn" data-tab="equipamentos" title="Equipamentos"><span class="ico">▣</span><span class="nav-label">Equipamentos</span></button>
+        <button class="tab-btn" data-tab="particularidades" title="Particularidades"><span class="ico">✦</span><span class="nav-label">Particularidades</span></button>
+        <button class="tab-btn" data-tab="reacoes" title="Reações"><span class="ico">↯</span><span class="nav-label">Reações</span></button>
+        <button class="tab-btn" data-tab="sugestoes" title="Sugestões"><span class="ico">✉</span><span class="nav-label">Sugestões</span></button>
+        <button class="tab-btn" data-tab="personagens" title="Personagens"><span class="ico">♙</span><span class="nav-label">Personagens</span></button>
+      </nav>
 
-    <div class="sidebar-foot bel-sidebar-foot">
-      <button class="mini-btn" id="btnExport" title="Exportar dados">⇩<span class="nav-label">Exportar dados</span></button>
-      <button class="mini-btn" id="btnImport" title="Importar dados">⇧<span class="nav-label">Importar dados</span></button>
-      <button class="mini-btn" id="btnReset" title="Restaurar dados">↺<span class="nav-label">Restaurar original</span></button>
-      <input type="file" id="importFile" accept="application/json" style="display:none">
+      <div class="sidebar-foot bel-sidebar-foot">
+        <button class="mini-btn" id="btnExport" title="Exportar dados">⇩<span class="nav-label">Exportar dados</span></button>
+        <button class="mini-btn" id="btnImport" title="Importar dados">⇧<span class="nav-label">Importar dados</span></button>
+        <button class="mini-btn" id="btnReset" title="Restaurar dados">↺<span class="nav-label">Restaurar original</span></button>
+        <input type="file" id="importFile" accept="application/json" style="display:none">
+      </div>
+    </div>
+
+    <div class="bel-dock-strip" id="dockStrip">
+      <button class="bel-dock-ctl" id="dockGrid" title="Todas as seções" aria-label="Todas as seções">▦</button>
+      <div class="bel-dock-tabs" id="dockTabs" role="tablist" aria-label="Abas abertas"></div>
+      <button class="bel-dock-ctl bel-dock-new" id="dockNew" title="Nova aba" aria-label="Nova aba">＋</button>
     </div>
   </aside>
 
@@ -7304,6 +7371,7 @@ function belActivateTab(id){
   belActiveTab = id;
   document.querySelectorAll(".app-tab").forEach(el=>el.classList.toggle("active", el.dataset.tab===id));
   document.querySelectorAll(".tab-btn").forEach(el=>el.classList.toggle("active", el.dataset.tab===id));
+  belRenderDock();
   document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
   const section = belSectionFor(id);
   if(section) section.classList.add("active");
@@ -7319,6 +7387,28 @@ function belActivateTab(id){
   belPersistTabs();
 }
 
+function belRenderDock(){
+  const strip = document.getElementById("dockTabs");
+  if(!strip) return;
+  strip.innerHTML = belTabs.map(([id,label,icon])=>`
+    <div class="dock-tab ${id===belActiveTab?"active":""}" data-tab="${belEscape(id)}" role="tab" aria-selected="${id===belActiveTab}">
+      <span class="tab-icon">${belEscape(icon)}</span>
+      <span class="tab-name">${belEscape(label)}</span>
+      <button class="tab-close" type="button" data-close-tab="${belEscape(id)}" aria-label="Fechar ${belEscape(label)}">×</button>
+    </div>`).join("");
+  const active = strip.querySelector(".dock-tab.active");
+  if(active && active.scrollIntoView && window.innerWidth<=900){
+    active.scrollIntoView({behavior:"smooth",inline:"center",block:"nearest"});
+  }
+}
+
+function belToggleDock(forceClose){
+  const side = document.getElementById("appSidebar");
+  if(!side) return;
+  if(forceClose) side.classList.remove("dock-open");
+  else side.classList.toggle("dock-open");
+}
+
 function belRenderTabs(){
   const root = document.getElementById("appTabs");
   if(!root) return;
@@ -7328,6 +7418,7 @@ function belRenderTabs(){
       <span class="tab-name">${belEscape(label)}</span>
       <button class="tab-close" type="button" data-close-tab="${belEscape(id)}" aria-label="Fechar ${belEscape(label)}">×</button>
     </div>`).join("") + `<button class="app-tab-new" type="button" id="newAppTab" title="Abrir menu">+</button>`;
+  belRenderDock();
 }
 
 function belOpenTab(id,label,icon,activate=true){
@@ -7358,6 +7449,31 @@ document.getElementById("tabNav").addEventListener("click",(e)=>{
   const btn = e.target.closest(".tab-btn");
   if(!btn) return;
   belOpenTab(btn.dataset.tab, btn.querySelector(".nav-label")?.textContent || btn.title, btn.querySelector(".ico")?.textContent || "•");
+  if(window.innerWidth<=900) belToggleDock(true);
+});
+
+document.getElementById("dockStrip")?.addEventListener("click",(e)=>{
+  const close = e.target.closest("[data-close-tab]");
+  if(close){ e.stopPropagation(); belCloseTab(close.dataset.closeTab); return; }
+  const tab = e.target.closest(".dock-tab");
+  if(tab && tab.dataset.tab) belOpenTab(tab.dataset.tab);
+});
+
+document.getElementById("dockGrid")?.addEventListener("click",(e)=>{
+  e.stopPropagation();
+  belToggleDock();
+});
+
+document.getElementById("dockNew")?.addEventListener("click",(e)=>{
+  e.stopPropagation();
+  const side = document.getElementById("appSidebar");
+  if(side && !side.classList.contains("dock-open")) belToggleDock();
+});
+
+document.addEventListener("click",(e)=>{
+  const side = document.getElementById("appSidebar");
+  if(!side || !side.classList.contains("dock-open")) return;
+  if(!side.contains(e.target)) belToggleDock(true);
 });
 
 document.getElementById("appTabs").addEventListener("click",(e)=>{
