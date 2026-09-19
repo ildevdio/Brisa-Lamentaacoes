@@ -761,10 +761,9 @@ a{color:#c9a46d;}
 .pdf-level{position:relative;height:100px;display:flex;align-items:center;justify-content:center;}
 .pdf-level-badge{
   position:relative;width:96px;height:100px;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;clip-path:polygon(20% 0,80% 0,100% 50%,80% 100%,20% 100%,0 50%);
+  align-items:center;justify-content:center;
 }
-.pdf-level-badge:before{content:"";position:absolute;inset:0;background:var(--brown);}
-.pdf-level-badge:after{content:"";position:absolute;inset:5px;background:var(--paper);}
+.pdf-level-badge svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
 .pdf-level-badge span{font-family:Georgia,serif;font-size:16px;position:relative;z-index:1;margin-top:-2px;color:var(--brown);}
 .pdf-level-badge strong{font-size:26px;position:relative;z-index:1;margin-top:4px;}
 .pdf-identity{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
@@ -783,11 +782,10 @@ a{color:#c9a46d;}
 .pdf-defense-item{display:flex;flex-direction:column;align-items:center;min-width:92px;}
 .pdf-shield{
   position:relative;width:76px;height:70px;display:grid;place-items:center;
-  font-size:22px;color:var(--brown);clip-path:polygon(18% 0,82% 0,100% 50%,82% 100%,18% 100%,0 50%);
+  font-size:22px;color:var(--brown);
 }
-.pdf-shield:before{content:"";position:absolute;inset:0;background:var(--brown);}
-.pdf-shield:after{content:"";position:absolute;inset:5px;background:var(--paper);}
-.pdf-shield>*{position:relative;z-index:1;}
+.pdf-shield svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+.pdf-shield>span{position:relative;z-index:1;}
 .pdf-defense-item b{font-family:Georgia,serif;font-size:16px;margin-top:5px;}
 .pdf-defense-item strong{font-size:20px;color:var(--brown);margin-top:-2px;}
 .pdf-attributes{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;align-items:start;}
@@ -827,27 +825,24 @@ a{color:#c9a46d;}
 .pdf-severity-labels{display:grid;grid-template-columns:1fr 1fr 1fr;font-family:var(--font-display);font-size:11px;text-align:center;margin-top:5px;}
 .pdf-severity small{display:block;text-align:center;font-size:10px;color:#8b7557;margin-top:3px;}
 .pdf-sev-diamond{
-  position:absolute;top:50%;width:46px;height:46px;margin-top:-23px;z-index:3;
-  display:grid;place-items:center;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);
-  font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--brown);
+  position:absolute;top:50%;width:40px;height:40px;margin-top:-20px;z-index:3;
+  display:grid;place-items:center;font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--brown);
 }
-.pdf-sev-diamond:before{content:"";position:absolute;inset:0;background:var(--brown);}
-.pdf-sev-diamond:after{content:"";position:absolute;inset:4px;background:var(--paper);}
-.pdf-sev-diamond span{position:relative;z-index:1;}
-.pdf-sev-major{left:calc(33.333% - 21px);}
-.pdf-sev-severe{left:calc(66.666% - 24px);}
+.pdf-sev-diamond svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+.pdf-sev-diamond>span{position:relative;z-index:1;}
+.pdf-sev-major{left:calc(33.333% - 18px);}
+.pdf-sev-severe{left:calc(66.666% - 22px);}
 
 .pdf-box{
   position:relative;border:2px solid var(--brown);border-radius:11px;background:rgba(255,255,255,.12);
   margin-top:13px;padding:24px 12px 13px;
 }
 .pdf-section-title{
-  position:absolute;top:-18px;left:50%;transform:translateX(-50%);
-  padding:7px 30px 5px;min-width:155px;text-align:center;font-family:Georgia,serif;font-size:17px;color:var(--ink);
-  clip-path:polygon(0 50%,13% 0,87% 0,100% 50%,87% 100%,13% 100%);
+  position:absolute;top:-19px;left:50%;transform:translateX(-50%);
+  padding:9px 30px 7px;min-width:150px;text-align:center;
+  font-family:Georgia,serif;font-size:17px;color:var(--ink);
 }
-.pdf-section-title:before{content:"";position:absolute;inset:0;background:var(--brown);}
-.pdf-section-title:after{content:"";position:absolute;inset:4px;background:var(--paper);}
+.pdf-section-title svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
 .pdf-section-title span{position:relative;z-index:1;white-space:nowrap;}
 .pdf-experience-list{padding:10px 5px 0;}
 .pdf-experience-list>div{display:flex;align-items:center;gap:10px;border-bottom:2px solid #a87525;height:31px;}
@@ -7956,7 +7951,10 @@ function pdfField(label, value, extraClass=""){
 }
 
 function pdfSectionTitle(title){
-  return `<div class="pdf-section-title"><span>${escapeHtml(title)}</span></div>`;
+  return `<div class="pdf-section-title">
+    <svg viewBox="0 0 100 42" preserveAspectRatio="none" aria-hidden="true"><polygon points="3,21 17,4 83,4 97,21 83,38 17,38" style="fill:var(--paper);stroke:var(--brown);" stroke-width="6" vector-effect="non-scaling-stroke"/></svg>
+    <span>${escapeHtml(title)}</span>
+  </div>`;
 }
 
 /* ---------- Ficha principal, reconstruída a partir da ficha PDF ---------- */
@@ -8051,6 +8049,7 @@ function sheetHtml(p){
       <header class="pdf-header">
         <div class="pdf-level">
           <div class="pdf-level-badge">
+            <svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="21,5 79,5 95,50 79,95 21,95 5,50" style="fill:rgba(255,255,255,.18);stroke:var(--brown);" stroke-width="8"/></svg>
             <span>Nível</span>
             <strong>${p.level||1}</strong>
           </div>
@@ -8069,8 +8068,8 @@ function sheetHtml(p){
 
       <section class="pdf-stats">
         <div class="pdf-defense">
-          <div class="pdf-defense-item"><div class="pdf-shield"><span>◈</span></div><b>Evasão</b><strong>${(p.evasao||0)+(mods.evasion||0)}</strong></div>
-          <div class="pdf-defense-item"><div class="pdf-shield"><span>⬟</span></div><b>Armadura</b><strong>${as.score}</strong></div>
+          <div class="pdf-defense-item"><div class="pdf-shield"><svg viewBox="0 0 100 92" aria-hidden="true"><polygon points="18,4 82,4 97,46 82,88 18,88 3,46" style="fill:rgba(255,255,255,.22);stroke:var(--brown);" stroke-width="7"/></svg><span>◈</span></div><b>Evasão</b><strong>${(p.evasao||0)+(mods.evasion||0)}</strong></div>
+          <div class="pdf-defense-item"><div class="pdf-shield"><svg viewBox="0 0 100 92" aria-hidden="true"><polygon points="18,4 82,4 97,46 82,88 18,88 3,46" style="fill:rgba(255,255,255,.22);stroke:var(--brown);" stroke-width="7"/></svg><span>⬟</span></div><b>Armadura</b><strong>${as.score}</strong></div>
         </div>
         <div class="pdf-attributes">
           ${sheetAttrHtml(p,"forca","Força",A("forca"),mods.forca||0)}
@@ -8095,8 +8094,8 @@ function sheetHtml(p){
           <div class="pdf-severity">
             <div class="pdf-severity-track">
               <div class="pdf-severity-bar"><span></span><span></span><span></span></div>
-              <div class="pdf-sev-diamond pdf-sev-major"><span>${as.major}</span></div>
-              <div class="pdf-sev-diamond pdf-sev-severe"><span>${as.severe}</span></div>
+              <div class="pdf-sev-diamond pdf-sev-major"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,3 97,50 50,97 3,50" style="fill:var(--paper);stroke:var(--brown);" stroke-width="8"/></svg><span>${as.major}</span></div>
+              <div class="pdf-sev-diamond pdf-sev-severe"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,3 97,50 50,97 3,50" style="fill:var(--paper);stroke:var(--brown);" stroke-width="8"/></svg><span>${as.severe}</span></div>
             </div>
             <div class="pdf-severity-labels"><b>Menor</b><b>Maior</b><b>Severo</b></div>
           </div>
