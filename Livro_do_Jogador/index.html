@@ -465,6 +465,36 @@ nav.tabs{display:flex;flex-direction:column;gap:2px;}
 .wiz-check-option .wco-name{color:var(--text);font-weight:600;}
 .wiz-check-option .wco-desc{color:var(--text-faint);font-size:11px;margin-top:2px;}
 
+/* ---------- Contraste do wizard nos painéis claros do tema 2.0 ---------- */
+.wizard-title{color:var(--ink);}
+.wizard-desc{color:var(--ink-soft);}
+.wizard-desc b{color:var(--ink);}
+.attr-dist-box .ad-btn{color:var(--ink);}
+.attr-dist-summary{color:var(--ink-soft);}
+.attr-dist-summary b{color:var(--ink);}
+.race-bonus-select label{color:var(--ink-soft);}
+.wiz-check-option .wco-name{color:var(--ink);}
+.wiz-check-option .wco-desc{color:var(--ink-soft);}
+.wizard-side-content h3{color:#e6d5b8;}
+.wizard-side-content .side-trait{color:var(--ink-soft);}
+.wizard-side-content .side-trait b{color:var(--ink);}
+.wizard-side-content .side-path{color:var(--ink-soft);}
+.wizard-side-content .side-path b{color:var(--accent-dark);}
+.toast{color:var(--ink);}
+.char-card{color:var(--ink);}
+.char-card h3{color:var(--ink);}
+.char-card .sub{color:var(--ink-soft);}
+.char-card .bar-row{color:var(--ink-soft);}
+.bar-btn{color:var(--ink);}
+.sheet{color:var(--ink);}
+.select-card .sc-tag,.select-card .sc-meta{color:var(--ink-soft);}
+.select-card .sc-body{color:var(--ink-soft);}
+.attr-dist-box .ad-val.pos{color:#7bb889;}
+.attr-dist-box .ad-val.neg{color:#cf8a8a;}
+.wizard-step-label{color:var(--ink-soft);}
+.wizard-step.active .wizard-step-label{color:#3f5a50;}
+.wizard-steps-hint{color:var(--ink-soft);}
+
 @media(max-width:900px){
   .wizard-layout{flex-direction:column;}
   .wizard-side{width:100%;border-left:none;border-top:1px solid var(--border);max-height:250px;}
@@ -8898,7 +8928,7 @@ function wizRenderAttributes(){
           <button class="ad-btn" onclick="wizAttrChange('${k}',1)" ${v>=2?'disabled':''}>+</button>
         </div>
         ${raceBon?`<div class="ad-race-bonus">+${raceBon} racial</div>`:""}
-        ${raceBon?`<div class="ad-name" style="font-size:13px;font-family:var(--font-display);margin-top:2px;color:${final>0?'var(--good)':(final<0?'var(--fear)':'var(--text-dim)')}">= ${final>=0?"+":""}${final}</div>`:""}
+        ${raceBon?`<div class="ad-name" style="font-size:13px;font-family:var(--font-display);margin-top:2px;color:${final>0?'#7bb889':(final<0?'#cf8a8a':'var(--text-dim)')}">= ${final>=0?"+":""}${final}</div>`:""}
       </div>`;
     }).join("")}
   </div>
@@ -8906,8 +8936,8 @@ function wizRenderAttributes(){
   ${raceModsHtml}
   <div class="attr-dist-summary">
     <b>Total distribuído:</b> ${total>=0?"+":""}${total} / +3<br>
-    <span style="color:var(--text-dim)">Slots usados:</span> ${[2,1,0,-1].map(v=>`<span style="display:inline-block;margin-right:10px;color:var(--text-dim)">${v>=0?"+":""}${v} <b style="color:${(usedSlots[v]||0)>(distributionCounts[v]||0)?'var(--fear)':'var(--text)'}">${usedSlots[v]||0}/${distributionCounts[v]||0}</b></span>`).join("")}<br>
-    ${!valid?'<span class="err">Distribuição inválida - use exatamente 1 atributo em +2, 2 em +1, 2 em +0 e 1 em -1.</span>':'<span style="color:var(--good)">Distribuição válida.</span>'}
+    <span style="color:var(--ink-soft)">Slots usados:</span> ${[2,1,0,-1].map(v=>`<span style="display:inline-block;margin-right:10px;color:var(--ink-soft)">${v>=0?"+":""}${v} <b style="color:${(usedSlots[v]||0)>(distributionCounts[v]||0)?'var(--fear)':'var(--ink)'}">${usedSlots[v]||0}/${distributionCounts[v]||0}</b></span>`).join("")}<br>
+    ${!valid?'<span class="err">Distribuição inválida - use exatamente 1 atributo em +2, 2 em +1, 2 em +0 e 1 em -1.</span>':'<span style="color:#3d6a4d">Distribuição válida.</span>'}
   </div>`;
 }
 function wizAttrChange(key, delta){
@@ -9061,7 +9091,7 @@ function wizRenderExpPart(){
     ${wizField("Anotações (identidade / história)","wiz-notes",wiz.notes,{textarea:true,full:true})}
   </div>
   <div class="field full" style="margin-top:12px;">
-    <label style="font-size:12px;color:var(--text-dim);font-weight:600;display:block;margin-bottom:8px;">Particularidades</label>
+    <label style="font-size:12px;color:var(--ink-soft);font-weight:600;display:block;margin-bottom:8px;">Particularidades</label>
     <div class="wiz-check-grid">
       ${(DATA.particularities||[]).map(p=>`
         <label class="wiz-check-option" onclick="event.stopPropagation()">
@@ -9072,7 +9102,7 @@ function wizRenderExpPart(){
           </div>
         </label>
       `).join("")}
-      ${(DATA.particularities||[]).length===0?'<span style="font-size:12px;color:var(--text-faint);">Nenhuma particularidade cadastrada.</span>':""}
+      ${(DATA.particularities||[]).length===0?'<span style="font-size:12px;color:var(--ink-soft);">Nenhuma particularidade cadastrada.</span>':""}
     </div>
   </div>`;
 }
@@ -9187,7 +9217,7 @@ function wizShowClassDetail(cls){
     ${cls.impulse?`<div class="side-section"><div class="side-section-title">Impulso</div><div class="side-trait"><b>${cls.impulse.name}</b>: ${cls.impulse.desc}</div></div>`:""}
     <div class="side-section">
       <div class="side-section-title">Caminhos</div>
-      ${(cls.paths||[]).map(p=>`<div class="side-path"><b>${p.name}</b> • ${p.focus||""}<br><span style="color:var(--text-faint)">${p.areas||""}</span></div>`).join("")}
+      ${(cls.paths||[]).map(p=>`<div class="side-path"><b>${p.name}</b> • ${p.focus||""}<br><span style="color:var(--ink-soft)">${p.areas||""}</span></div>`).join("")}
     </div>
   </div>`;
 }
