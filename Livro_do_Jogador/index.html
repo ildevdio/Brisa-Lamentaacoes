@@ -7896,15 +7896,12 @@ function resMaxOf(p, field){
 
 /* ---------- Ficha detalhada do personagem ---------- */
 function sheetAttrHtml(p, key, label, value, mod){
-  const base = Number((p.attributes||{})[key]||0);
-  return `<div class="pdf-attr" title="Clique nos controles para ajustar o valor base">
-    <button class="pdf-attr-btn" onclick="changeAttribute('${p.id}','${key}',-1)" aria-label="Diminuir ${label}">−</button>
+  return `<div class="pdf-attr" title="${label} (valor efetivo: base + raça + classe)">
     <div class="pdf-attr-diamond">
       <span class="pdf-attr-value ${value>0?'positive':(value<0?'negative':'')}">${value>=0?"+":""}${value}</span>
     </div>
     <div class="pdf-attr-label">${label}</div>
     ${mod?`<span class="pdf-attr-mod">+${mod}</span>`:""}
-    <button class="pdf-attr-btn" onclick="changeAttribute('${p.id}','${key}',1)" aria-label="Aumentar ${label}">+</button>
   </div>`;
 }
 
@@ -7913,15 +7910,6 @@ function adjustGold(charId, amount){
   if(!p) return;
   const current = Number(p.gold)||0;
   p.gold = current === amount ? Math.max(0, amount-1) : amount;
-  persist();
-  viewChar(charId);
-}
-
-function changeAttribute(charId, key, delta){
-  const p = DATA.characters.find(x=>x.id===charId);
-  if(!p) return;
-  p.attributes = p.attributes || {};
-  p.attributes[key] = Number(p.attributes[key]||0) + delta;
   persist();
   viewChar(charId);
 }
@@ -8898,8 +8886,6 @@ function wizRenderAttributes(){
       const raceBon = wizRaceBonus()[k]||0;
       const final = v + raceBon;
       const cls = final > 0 ? "pos" : (final < 0 ? "neg" : "zero");
-      const canInc = v < 2 && (usedSlots[v]||0) < (distributionCounts[v]||0) + (v+1<=2?0:0);
-      const canDec = v > -1;
       const slotsHtml = ATTR_SLOTS.sort((a,b)=>b-a).map(sv=>{
         const filled = sv === v && (usedSlots[sv]||0) > 0;
         return `<span class="slot ${filled?'used':'empty'}"></span>`;
@@ -8920,22 +8906,13 @@ function wizRenderAttributes(){
   ${raceModsHtml}
   <div class="attr-dist-summary">
     <b>Total distribuído:</b> ${total>=0?"+":""}${total} / +3<br>
-    ${!valid?'<span class="err">Distribuição inválida - ajuste os atributos.</span>':'<span style="color:var(--good)">Distribuição válida.</span>'}
+    <span style="color:var(--text-dim)">Slots usados:</span> ${[2,1,0,-1].map(v=>`<span style="display:inline-block;margin-right:10px;color:var(--text-dim)">${v>=0?"+":""}${v} <b style="color:${(usedSlots[v]||0)>(distributionCounts[v]||0)?'var(--fear)':'var(--text)'}">${usedSlots[v]||0}/${distributionCounts[v]||0}</b></span>`).join("")}<br>
+    ${!valid?'<span class="err">Distribuição inválida - use exatamente 1 atributo em +2, 2 em +1, 2 em +0 e 1 em -1.</span>':'<span style="color:var(--good)">Distribuição válida.</span>'}
   </div>`;
 }
 function wizAttrChange(key, delta){
-  wizSyncAttrsFromInputs();
-  const curVal = wiz.attributes[key];
-  const newVal = curVal + delta;
+  const newVal = (wiz.attributes[key]||0) + delta;
   if(newVal < -1 || newVal > 2) return;
-  const distCounts = {};
-  ATTR_SLOTS.forEach(v=>{ distCounts[v] = (distCounts[v]||0)+1; });
-  const usedCounts = {};
-  ATTR_KEYS.forEach(k=>{ usedCounts[wiz.attributes[k]] = (usedCounts[wiz.attributes[k]]||0)+1; });
-  if(delta > 0){
-    if((usedCounts[curVal]||0) < 1) return;
-    if(((usedCounts[newVal]||0)+1) > (distCounts[newVal]||0)) return;
-  }
   wiz.attributes[key] = newVal;
   renderWizardStep();
 }
