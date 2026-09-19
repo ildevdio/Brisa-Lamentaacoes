@@ -9234,7 +9234,11 @@ function wizParseRaceBonus(bonusStr){
 /* ---------- Step 4: Features (Spells/Techniques) ---------- */
 function wizRenderFeatures(){
   const cls = DATA.classes.find(c=>c.id===wiz.classId);
-  const isMagic = cls && cls.type==="Mágica";
+  if(!cls){
+    return `<p class="wizard-title">Magias / Técnicas</p>
+    <div class="empty-state">Selecione uma <b>Classe</b> na etapa anterior para ver as magias/técnicas disponíveis.</div>`;
+  }
+  const isMagic = cls.type==="Mágica";
   const items = isMagic ? DATA.spells.filter(s=>s.class===cls.name) : DATA.techniques.filter(t=>t.class===cls.name);
   const itemType = isMagic ? "Magia" : "Técnica";
   const resName = cls ? cls.resource : "Recurso";
