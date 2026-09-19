@@ -502,6 +502,33 @@ nav.tabs{display:flex;flex-direction:column;gap:2px;}
   .attr-dist-grid{grid-template-columns:repeat(2,1fr);}
   .select-grid{grid-template-columns:1fr;}
 }
+
+/* ---------- Ações de Level Up (wizard) ---------- */
+.lu-summary{font-size:12.5px;color:var(--text-dim);line-height:1.6;background:var(--bg-soft);border:1px solid var(--border-soft);border-radius:10px;padding:10px 14px;margin:0 0 12px;}
+.lu-summary b{color:var(--text);}
+.lu-list{display:flex;flex-direction:column;gap:10px;}
+.lu-row{background:var(--panel);border:1px solid var(--border-soft);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
+.lu-row-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.lu-level{font-family:var(--font-display);font-size:14px;font-weight:700;min-width:76px;color:var(--text);}
+.lu-marco{font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:var(--hope);color:#241b12;padding:2px 8px;border-radius:99px;margin-left:4px;}
+.lu-row-head select{flex:1;min-width:150px;}
+.lu-hint{font-size:11.5px;color:var(--text-faint);line-height:1.45;}
+.lu-hint b{color:var(--text);}
+.lu-target{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.lu-target label{font-size:10.5px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;}
+.lu-target .input{flex:1;min-width:170px;}
+.lu-target select{flex:1;min-width:170px;}
+
+/* Cards bloqueados por Tier/nível */
+.select-card.locked{opacity:.5;cursor:not-allowed;border-style:dashed;}
+.select-card.locked:hover{border-color:var(--border-soft);background:var(--panel);}
+.select-card.locked .sc-name{color:var(--text-faint);}
+.select-card.locked.selected{opacity:1;}
+.tag-tier-locked{font-size:9.5px;font-weight:700;color:var(--fear);border-color:var(--fear);}
+
+/* Ações na ficha do personagem */
+.lu-sheet{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--ink-soft);line-height:1.45;}
+.lu-sheet b{color:var(--ink);}
 /* =====================================================================
    BRISA 2.0 • VISUAL SYSTEM
    Interface inspirada na ficha de personagem enviada pelo autor.
@@ -8161,6 +8188,9 @@ function sheetHtml(p){
   const raceTraits = race ? (race.traits||[]).map(t=>`<li><b>${escapeHtml(t.name)}</b>${t.desc?": "+escapeHtml(t.desc):""}</li>`).join("") : "";
   const classTraits = cls ? (cls.features||[]).map(f=>`<li><b>${escapeHtml(f.name)}</b>${f.desc?": "+escapeHtml(f.desc):""}</li>`).join("") : "";
 
+  const levelUpList = Array.isArray(p.levelUp)?p.levelUp.filter(a=>a.categoria).sort((a,b)=>(a.level||0)-(b.level||0)):[];
+  const levelUpHtml = levelUpList.length ? `<div class="lu-sheet">${levelUpList.map(a=>`<span><b>Nível ${a.level}${a.marco?" • Marco":""}</b> — ${escapeHtml(a.categoria)}${a.atributo?` → +1 ${ATTR_NAMES[a.atributo]}`:""}${a.alvo?`: ${escapeHtml(a.alvo)}`:""}</span>`).join("")}</div>` : `<div class="pdf-muted">Sem Ações de Level Up registradas (nível 1 ou ações pendentes).</div>`;
+
   return `
   <section class="character-sheet">
     <div class="sheet-toolbar">
@@ -8301,6 +8331,10 @@ function sheetHtml(p){
             ${raceTraits?`<ul>${raceTraits}</ul>`:""}
           </div>
           <div class="pdf-detail-panel">
+            <h3>Ações de Level Up</h3>
+            ${levelUpHtml}
+          </div>
+          <div class="pdf-detail-panel">
             <h3>Inventário</h3>
             ${invListHtml(p)}
           </div>
@@ -8352,15 +8386,20 @@ function recalcChar(id){
   const cls = DATA.classes.find(c=>c.name===p.class);
   const isPhysical = cls ? cls.type==="Física" : true;
   const mods = charMods(p);
-  p.vidaMax = isPhysical?7:6;
-  p.recursoMax = cls?cls.resourceMax:20;
+  const lvl = Math.max(1, Number(p.level)||1);
+  const levelUp = Array.isArray(p.levelUp)?p.levelUp:[];
+  const vidaActs = levelUp.filter(a=>a.categoria==="Vida").length;
+  const manaActs = levelUp.filter(a=>a.categoria==="Mana").length;
+  const pranaActs = levelUp.filter(a=>a.categoria==="Prana").length;
+  p.vidaMax = (isPhysical?7:6) + Math.max(0, lvl-1) + vidaActs;
+  p.recursoMax = (cls?cls.resourceMax:20) + (isPhysical? pranaActs*2 : manaActs*5);
   p.lucidezMax = cls?cls.lucidityMax:(isPhysical?80:100);
   p.vida    = Math.min(p.vida    ?? p.vidaMax,    resMaxOf(p,"vida"));
   p.recurso = resMaxOf(p,"recurso");
   p.lucidez = resMaxOf(p,"lucidez");
   p.evasao = 10 + (Number(p.attributes.agilidade)||0) + (mods.evasion||0);
   p.resourceName = cls?cls.resource:"Recurso";
-  persist(); viewChar(id); renderPersonagens(); showToast("Recursos recalculados a partir da Classe.");
+  persist(); viewChar(id); renderPersonagens(); showToast("Recursos recalculados a partir da Classe e das Ações de Level Up.");
 }
 
 function deleteChar(id){
@@ -8701,6 +8740,45 @@ const ATTR_NAMES = {forca:"Força",agilidade:"Agilidade",precisao:"Precisão",in
 const ATTR_DISTRIBUTION = [{val:2,count:1},{val:1,count:2},{val:0,count:2},{val:-1,count:1}];
 const ATTR_SLOTS = ATTR_DISTRIBUTION.flatMap(d=>Array(d.count).fill(d.val));
 
+/* ---------- Tier & Ações de Level Up helpers ---------- */
+const WIZ_ROMAN = ["I","II","III","IV","V","VI","VII"];
+const WIZ_MARCO_LEVELS = [5,10,15,20];
+function wizTierRoman(n){ return WIZ_ROMAN[Math.max(1,Number(n)||1)-1]||"I"; }
+function wizTierForLevel(level){
+  const tbl = ((DATA.progression||{}).nivelTable)||[];
+  const row = tbl.find(r=>Number(r.nivel)===Number(level)) || tbl[tbl.length-1];
+  if(!row) return 1;
+  const map = {I:1,II:2,III:3,IV:4,V:5,VI:6,VII:7};
+  return map[row.tier]||1;
+}
+function wizAttributeCap(level){
+  level = Math.max(1,Number(level)||1);
+  return level>=20?5:(level>=10?4:3);
+}
+function wizFeatureRank(f, isMagic){ return Number(isMagic?f.circle:f.grade)||1; }
+function wizFeatureAllowed(f, isMagic, level){
+  level = level===undefined?wiz.level:level;
+  return (f.levelMin==null || Number(f.levelMin)<=level) && wizFeatureRank(f,isMagic)<=wizTierForLevel(level);
+}
+function wizItemAllowed(item){ return (item.tier==null) || Number(item.tier)<=wizTierForLevel(wiz.level); }
+function wizSlotLevels(){
+  const out = [];
+  const level = Math.max(2,Number(wiz.level)||1);
+  for(let l=2; l<=level; l++) out.push({level:l, marco:WIZ_MARCO_LEVELS.includes(l)});
+  return out;
+}
+function wizLevelUpFind(l){ return (wiz.levelUp||[]).find(x=>x.level===l); }
+function wizLevelUpEnsure(l){
+  if(!Array.isArray(wiz.levelUp)) wiz.levelUp=[];
+  let e = wizLevelUpFind(l);
+  if(!e){
+    const m = wizSlotLevels().find(x=>x.level===l);
+    e = {level:Number(l), marco:!!(m&&m.marco), categoria:"", atributo:null, alvo:""};
+    wiz.levelUp.push(e);
+  }
+  return e;
+}
+
 let wiz = {};
 let wizEditId = null;
 
@@ -8711,6 +8789,7 @@ function resetWizard(){
     attributes:{forca:0,agilidade:0,precisao:0,instinto:0,presenca:0,inteligencia:0},
     raceBonusAttr:null, hasRaceChoice:false,
     experiences:"", particularities:[], equipment:"", traits:"", notes:"",
+    levelUp:[],
     _selectedWeapons:[], _selectedArmor:null, _selectedFeatures:[]
   };
   wizEditId = null;
@@ -8726,6 +8805,7 @@ function openCharForm(id){
     wiz.name = p.name||"";
     wiz.path = p.path||"";
     wiz.level = p.level||1;
+    wiz.levelUp = structuredCloneSafe(p.levelUp||[]);
     wiz.raceId = (DATA.races.find(r=>r.name===p.race))?.id||null;
     wiz.classId = (DATA.classes.find(c=>c.name===p.class))?.id||null;
     wiz.attributes = {...(p.attributes||{forca:0,agilidade:0,precisao:0,instinto:0,presenca:0,inteligencia:0})};
@@ -8739,6 +8819,12 @@ function openCharForm(id){
     // remove o bônus racial aplicado na criação, devolvendo a distribuição "bruta"
     const savedBonus = p.raceBonus || {};
     ATTR_KEYS.forEach(k=>{ wiz.attributes[k] = Math.max(-1, (wiz.attributes[k]||0) - (savedBonus[k]||0)); });
+    // remove também os bônus das Ações de Level Up, devolvendo a distribuição de criação
+    const savedLuBonus = {};
+    (p.levelUp||[]).forEach(a=>{
+      if(a.categoria==="Atributo" && a.atributo) savedLuBonus[a.atributo]=(savedLuBonus[a.atributo]||0)+1;
+    });
+    ATTR_KEYS.forEach(k=>{ wiz.attributes[k] = Math.max(-1, (wiz.attributes[k]||0) - (savedLuBonus[k]||0)); });
     wiz.raceBonusAttr = wiz.hasRaceChoice ? (p.raceBonusAttr||null) : null;
     // magias/técnicas e armas/armadura escolhidas no assistente
     wiz._selectedFeatures = Array.isArray(p.features) ? [...p.features] : [];
@@ -8815,6 +8901,45 @@ function wizValidate(){
     if(final > 3) errs.push(`${ATTR_NAMES[k]} ficaria com +${final} (máximo +3).`);
   }
   if(wiz.hasRaceChoice && !wiz.raceBonusAttr) errs.push("Escolha o atributo do bônus racial.");
+
+  // Ações de Level Up: tetos de atributo e tier/nível dos itens
+  const clsV = DATA.classes.find(c=>c.id===wiz.classId);
+  const isMagicV = clsV && clsV.type==="Mágica";
+  const levelV = Math.max(1, Number(wiz.level)||1);
+  const levelUpV = Array.isArray(wiz.levelUp)?wiz.levelUp:[];
+  // força sincronização em caso de edição via campo level fora do passo 8
+  if(wiz.step === 8 && levelV>1) wizSyncLevelUpFromInputs();
+  if(levelV>1 && levelUpV.length){
+    const attrBonus = {};
+    levelUpV.forEach(a=>{
+      if(a.categoria==="Atributo" && a.atributo) attrBonus[a.atributo]=(attrBonus[a.atributo]||0)+1;
+    });
+    const cap = wizAttributeCap(levelV);
+    const finalAttr = {};
+    ATTR_KEYS.forEach(k=>{
+      const final = (wiz.attributes[k]||0) + (raceBon[k]||0) + (attrBonus[k]||0);
+      if(final > cap) errs.push(`${ATTR_NAMES[k]} ficaria em +${final} com as Ações de Level Up (máximo +${cap} no nível ${levelV}).`);
+      finalAttr[k] = final;
+    });
+    const caps5 = ATTR_KEYS.filter(k=>finalAttr[k]>=5);
+    if(caps5.length>1) errs.push(`Apenas um atributo pode alcançar +5 (${caps5.map(k=>ATTR_NAMES[k]).join(", ")}).`);
+  }
+  const maxTierV = wizTierForLevel(levelV);
+  (wiz._selectedFeatures||[]).forEach(id=>{
+    const f = DATA.spells.find(x=>x.id===id) || DATA.techniques.find(x=>x.id===id);
+    if(f && !wizFeatureAllowed(f, isMagicV, levelV)) errs.push(`${f.name} não está acessível no nível ${levelV} (exige nível/tier maior).`);
+  });
+  (wiz._selectedWeapons||[]).forEach(id=>{
+    const it = DATA.items.find(x=>x.id===id);
+    if(it && it.tier>maxTierV) errs.push(`${it.name} exige acesso ao Tier ${wizTierRoman(it.tier)} (seu nível permite até ${wizTierRoman(maxTierV)}).`);
+  });
+  if(wiz._selectedArmor){
+    const it = DATA.items.find(x=>x.id===wiz._selectedArmor);
+    if(it && it.tier>maxTierV) errs.push(`${it.name} exige acesso ao Tier ${wizTierRoman(it.tier)} (seu nível permite até ${wizTierRoman(maxTierV)}).`);
+  }
+  if(levelV>1 && levelUpV.filter(a=>a.categoria).length > 0 && levelUpV.filter(a=>a.categoria).length > (levelV-1 + WIZ_MARCO_LEVELS.filter(m=>m<=levelV).length)){
+    errs.push("Quantidade de Ações de Level Up registradas excede o limite do nível.");
+  }
   return errs;
 }
 
@@ -8823,8 +8948,9 @@ function renderWizardStep(){
   const body = document.getElementById("wizardBody");
   const dots = document.getElementById("wizardDots");
   const nav = document.getElementById("wizardNav");
-  const steps = 8;
-  const stepNames = ["Identidade","Raça","Classe","Atributos","Magias/Téc.","Armas","Armadura","Experiência"];
+  const hasLevelUp = Number(wiz.level||1) > 1;
+  const stepNames = ["Identidade","Raça","Classe","Atributos","Magias/Téc.","Armas","Armadura","Experiência"].concat(hasLevelUp?["Level Up"]:[]);
+  const steps = stepNames.length;
   dots.innerHTML = Array.from({length:steps},(_, i)=>
     `<div class="wizard-step ${i===wiz.step?'active':''}" onclick="wizGoTo(${i})" title="Pular para: ${stepNames[i]}">
       <div class="wizard-step-dot ${i===wiz.step?'active':(i<wiz.step?'done':'')}"></div>
@@ -8842,6 +8968,7 @@ function renderWizardStep(){
     case 5: html = wizRenderWeapons(); break;
     case 6: html = wizRenderArmor(); break;
     case 7: html = wizRenderExpPart(); break;
+    case 8: html = wizRenderLevelUp(); break;
   }
   body.innerHTML = html;
 
@@ -8886,10 +9013,14 @@ function wizSyncCurrentStep(){
   if(wiz.step === 7){
     wizSyncExpPartFromInputs();
   }
+  if(wiz.step === 8){
+    wizSyncLevelUpFromInputs();
+  }
 }
 function wizGoTo(step){
   wizSyncCurrentStep();
-  wiz.step = Math.max(0, Math.min(step, 7));
+  const max = Number(wiz.level||1)>1 ? 8 : 7;
+  wiz.step = Math.max(0, Math.min(step, max));
   renderWizardStep();
 }
 function wizNextStep(){
@@ -8900,13 +9031,32 @@ function wizNextStep(){
 
 /* ---------- Step 0: Identity ---------- */
 function wizRenderIdentity(){
+  const levelHtr = Number(wiz.level||1)>1
+    ? `<div class="hint" style="color:var(--hope);">Nível acima de 1: a etapa final do assistente será <b>Ações de Level Up</b>.</div>`
+    : "";
   return `<p class="wizard-title">Identidade do Personagem</p>
   <p class="wizard-desc">Comece pelo básico: nome, caminho e nível.</p>
   <div class="form-grid">
     ${wizField("Nome do personagem","wiz-name",wiz.name,{required:true,full:true})}
     ${wizField("Caminho (opcional)","wiz-path",wiz.path,{full:true,hint:"O caminho ideológico ou de vida do personagem."})}
-    ${wizField("Nível","wiz-level",wiz.level,{number:true})}
+    <div class="field">
+      <label>Nível</label>
+      <input class="input" type="number" id="wiz-level" min="1" step="1" value="${Number(wiz.level)||1}" onchange="wizLevelChange()">
+      ${levelHtr}
+    </div>
   </div>`;
+}
+function wizLevelChange(){
+  const inp = document.getElementById("wiz-level");
+  if(inp){
+    const newLevel = Math.max(1, Number(inp.value)||1);
+    wiz.level = newLevel;
+    // garante que as ações antigas de níveis superiores não gerem conflito ao reduzir o nível
+    wiz.levelUp = (wiz.levelUp||[]).filter(a=>a.level<=wiz.level);
+  }
+  if(Number(wiz.level)<=1 && wiz.step>=8) wiz.step = 7;
+  if(Number(wiz.level)>1 && wiz.step===7) wiz.step = 8;
+  renderWizardStep();
 }
 
 /* ---------- Step 1: Race ---------- */
@@ -9088,17 +9238,22 @@ function wizRenderFeatures(){
   const items = isMagic ? DATA.spells.filter(s=>s.class===cls.name) : DATA.techniques.filter(t=>t.class===cls.name);
   const itemType = isMagic ? "Magia" : "Técnica";
   const resName = cls ? cls.resource : "Recurso";
+  const maxTier = wizTierForLevel(wiz.level);
 
   return `<p class="wizard-title">${isMagic?"Magias":"Técnicas"} da Classe</p>
-  <p class="wizard-desc">Selecione as ${isMagic?"magias":"técnicas"} iniciais da sua classe. Pode escolher várias • são ${isMagic?"Círculo I":"Grau I"} e nível mínimo 1.</p>
+  <p class="wizard-desc">Selecione as ${isMagic?"magias":"técnicas"} da sua classe. No nível ${wiz.level||1} você acessa até ${isMagic?"Círculo":"Grau"} ${wizTierRoman(maxTier)} • itens acima do seu Tier aparecem bloqueados.</p>
   <div class="select-grid" id="wizFeaturesGrid">
     ${items.map(f=>{
       const checked = (wiz._selectedFeatures||[]).includes(f.id);
+      const locked = !wizFeatureAllowed(f, isMagic);
+      const tag = isMagic ? `Círculo ${f.circle}` : `Grau ${f.grade}${f.type?(" • "+f.type):""}`;
+      const req = f.levelMin>wiz.level ? `Nível ${f.levelMin}+` : `${isMagic?"Círculo":"Grau"} ${wizTierRoman(wizFeatureRank(f,isMagic))}+`;
+      const onclick = (locked && !checked) ? `wizBlocked('${f.id}')` : `wizToggleFeature('${f.id}')`;
       const meta = isMagic ? `Círculo ${f.circle} • ${f.mana} Mana • ${f.attr}` : `Grau ${f.grade} • ${f.prana} Prana • ${f.attr} • ${f.type}`;
-      return `<div class="select-card ${checked?'selected':''}" onclick="wizToggleFeature('${f.id}')" data-id="${f.id}">
+      return `<div class="select-card ${checked?'selected':''} ${locked?'locked':''}" onclick="${onclick}" data-id="${f.id}">
         <div class="sc-name">${f.name}</div>
-        <div class="sc-tag ${isMagic?'tag-magica':'tag-fisica'}">${isMagic?"Círculo "+f.circle:"Grau "+f.grade}</div>
-        <div class="sc-meta"><b>${meta}</b></div>
+        <div class="sc-tag ${isMagic?'tag-magica':'tag-fisica'}">${tag}</div>
+        ${locked?`<div class="sc-tag tag-tier-locked">🔒 ${req}</div>`:`<div class="sc-meta"><b>${meta}</b></div>`}
         <div class="sc-body">${f.effect||""}</div>
       </div>`;
     }).join("")}
@@ -9106,14 +9261,16 @@ function wizRenderFeatures(){
   </div>`;
 }
 function wizToggleFeature(id){
+  const cls = DATA.classes.find(c=>c.id===wiz.classId);
+  const isMagic = cls && cls.type==="Mágica";
+  const f = (isMagic?DATA.spells:DATA.techniques).find(x=>x.id===id);
   if(!wiz._selectedFeatures) wiz._selectedFeatures = [];
+  if(f && !wizFeatureAllowed(f, isMagic) && !wiz._selectedFeatures.includes(id)){ wizBlocked(id); return; }
   const idx = wiz._selectedFeatures.indexOf(id);
   if(idx>=0) wiz._selectedFeatures.splice(idx,1); else wiz._selectedFeatures.push(id);
   document.querySelectorAll("#wizFeaturesGrid .select-card").forEach(c=>{
     c.classList.toggle("selected", wiz._selectedFeatures.includes(c.dataset.id));
   });
-  const cls = DATA.classes.find(c=>c.id===wiz.classId);
-  const isMagic = cls && cls.type==="Mágica";
   const allItems = isMagic ? DATA.spells : DATA.techniques;
   const item = allItems.find(x=>x.id===id);
   if(item) wizShowFeatureDetail(item, isMagic);
@@ -9121,14 +9278,18 @@ function wizToggleFeature(id){
 /* ---------- Step 5: Weapons ---------- */
 function wizRenderWeapons(){
   const weapons = DATA.items.filter(i=>i.category==="Arma");
+  const maxTier = wizTierForLevel(wiz.level);
   return `<p class="wizard-title">Armas</p>
-  <p class="wizard-desc">Selecione as armas do seu personagem. Clique para ver detalhes no painel lateral.</p>
+  <p class="wizard-desc">Selecione as armas do seu personagem. No nível ${wiz.level||1} você acessa até o <b>Tier ${wizTierRoman(maxTier)}</b> • armas acima disso ficam bloqueadas. Clique para ver detalhes no painel lateral.</p>
   <div class="select-grid" id="wizWeaponsGrid">
     ${weapons.map(w=>{
       const checked = (wiz._selectedWeapons||[]).includes(w.id);
-      return `<div class="select-card ${checked?'selected':''}" onclick="wizToggleWeapon('${w.id}')" data-id="${w.id}">
+      const locked = !wizItemAllowed(w);
+      const onclick = (locked && !checked) ? `wizBlocked('${w.id}')` : `wizToggleWeapon('${w.id}')`;
+      return `<div class="select-card ${checked?'selected':''} ${locked?'locked':''}" onclick="${onclick}" data-id="${w.id}">
         <div class="sc-name">${w.name}</div>
         <div class="sc-tag tag-fisica">Tier ${w.tier}</div>
+        ${locked?`<div class="sc-tag tag-tier-locked">🔒 requer Tier ${wizTierRoman(w.tier)}</div>`:""}
         <div class="sc-meta"><b>${w.category}</b>${w.attr?` • Traço: <b>${w.attr}</b>`:""}</div>
         ${w.damage?`<div class="sc-meta">Dano: <b>${w.damage} ${w.dtype||""}</b> • ${w.range||""} • ${w.burden||""}</div>`:""}
         <div class="sc-body">${w.desc||""}</div>
@@ -9138,13 +9299,14 @@ function wizRenderWeapons(){
   </div>`;
 }
 function wizToggleWeapon(id){
+  const item = DATA.items.find(x=>x.id===id);
   if(!wiz._selectedWeapons) wiz._selectedWeapons = [];
+  if(item && !wizItemAllowed(item) && !wiz._selectedWeapons.includes(id)){ wizBlocked(id); return; }
   const idx = wiz._selectedWeapons.indexOf(id);
   if(idx>=0) wiz._selectedWeapons.splice(idx,1); else wiz._selectedWeapons.push(id);
   document.querySelectorAll("#wizWeaponsGrid .select-card").forEach(c=>{
     c.classList.toggle("selected", wiz._selectedWeapons.includes(c.dataset.id));
   });
-  const item = DATA.items.find(x=>x.id===id);
   if(item) wizShowItemDetail(item, "Arma");
 }
 function wizShowItemDetail(item, label){
@@ -9164,14 +9326,18 @@ function wizShowItemDetail(item, label){
 /* ---------- Step 6: Armor ---------- */
 function wizRenderArmor(){
   const armors = DATA.items.filter(i=>i.category==="Armadura");
+  const maxTier = wizTierForLevel(wiz.level);
   return `<p class="wizard-title">Armadura</p>
-  <p class="wizard-desc">Selecione a armadura do seu personagem. Clique para ver detalhes no painel lateral.</p>
+  <p class="wizard-desc">Selecione a armadura do seu personagem. No nível ${wiz.level||1} você acessa até o <b>Tier ${wizTierRoman(maxTier)}</b> • armaduras acima disso ficam bloqueadas. Clique para ver detalhes no painel lateral.</p>
   <div class="select-grid" id="wizArmorGrid">
     ${armors.map(a=>{
       const checked = wiz._selectedArmor===a.id;
-      return `<div class="select-card ${checked?'selected':''}" onclick="wizSelectArmor('${a.id}')" data-id="${a.id}">
+      const locked = !wizItemAllowed(a);
+      const onclick = (locked && !checked) ? `wizBlocked('${a.id}')` : `wizSelectArmor('${a.id}')`;
+      return `<div class="select-card ${checked?'selected':''} ${locked?'locked':''}" onclick="${onclick}" data-id="${a.id}">
         <div class="sc-name">${a.name}</div>
         <div class="sc-tag tag-fisica">Tier ${a.tier}</div>
+        ${locked?`<div class="sc-tag tag-tier-locked">🔒 requer Tier ${wizTierRoman(a.tier)}</div>`:""}
         <div class="sc-meta"><b>Armadura</b></div>
         <div class="sc-body">${a.desc||""}</div>
         ${a.feature?`<div class="sc-meta" style="color:var(--brisa)">${a.feature}</div>`:""}
@@ -9181,12 +9347,13 @@ function wizRenderArmor(){
   </div>`;
 }
 function wizSelectArmor(id){
+  const item = DATA.items.find(x=>x.id===id);
+  if(item && !wizItemAllowed(item) && !(wiz._selectedArmor===id)){ wizBlocked(id); return; }
   if(wiz._selectedArmor === id){
     wiz._selectedArmor = null;
     wizClearSide();
   } else {
     wiz._selectedArmor = id;
-    const item = DATA.items.find(x=>x.id===id);
     if(item) wizShowItemDetail(item, "Armadura");
   }
   document.querySelectorAll("#wizArmorGrid .select-card").forEach(c=>{
@@ -9236,19 +9403,125 @@ function wizSyncExpPartFromInputs(){
 }
 function wizSyncFeaturesFromInputs(){}
 
+/* ---------- Step 8: Ações de Level Up ---------- */
+function wizRenderLevelUp(){
+  const P = DATA.progression||{};
+  const cats = (P.levelActions||[]).slice();
+  const cls = DATA.classes.find(c=>c.id===wiz.classId);
+  const isMagic = cls && cls.type==="Mágica";
+  // Mana é só p/ classes mágicas; Prana só p/ físicas
+  const filteredCats = cats.filter(c=>{
+    if(c.categoria==="Mana") return !!isMagic;
+    if(c.categoria==="Prana") return !isMagic;
+    return true;
+  });
+  const level = Math.max(2, Number(wiz.level)||1);
+  const qtdNv = level-1;
+  const marcos = WIZ_MARCO_LEVELS.filter(m=>m<=level);
+  const total = qtdNv + marcos.length;
+  const tier = wizTierForLevel(level);
+  const cap = wizAttributeCap(level);
+  const summary = `
+    <div class="lu-summary">
+      <b>Nível ${level}</b> • acesso ao <b>Tier ${wizTierRoman(tier)}</b> • teto de atributo <b>+${cap}</b><br>
+      Ações ganhas: <b>${qtdNv} de Level Up</b>${marcos.length?` + <b>${marcos.length} de Marco</b> (níveis ${marcos.join(", ")})`:""} = <b>${total}</b> escolhas.<br>
+      <span class="lu-hint">Registre o que cada Ação comprou (categoria + detalhe). Ações <b>Atributo</b>, <b>Vida</b>, <b>Mana</b> e <b>Prana</b> aplicam os bônus automaticamente no salvamento; as demais são apenas registro.</span>
+    </div>`;
+
+  return `<p class="wizard-title">Ações de Level Up</p>
+  <p class="wizard-desc">Este personagem está acima do 1º nível: escolha o que cada Ação de Level Up comprou, no estilo do Heart of Daggres. Ações acumuladas sem gasto continuam válidas.</p>
+  ${summary}
+  <div class="lu-list">
+    ${wizSlotLevels().map(s=>{
+      const e = wizLevelUpFind(s.level)||{categoria:"",atributo:null,alvo:""};
+      const sel = filteredCats.find(c=>c.categoria===e.categoria);
+      const opts = `<option value="">• escolha uma categoria •</option>` + filteredCats.map(c=>`<option value="${escapeHtml(c.categoria)}" ${e.categoria===c.categoria?"selected":""}>${escapeHtml(c.categoria)}</option>`).join("");
+      const attrSel = e.categoria==="Atributo" ? `<select class="input" data-lu="${s.level}" data-luf="atributo" onchange="wizLevelUpChange(${s.level},'atributo',this.value)">
+        <option value="">• atributo •</option>${ATTR_KEYS.map(k=>`<option value="${k}" ${e.atributo===k?"selected":""}>${ATTR_NAMES[k]}</option>`).join("")}
+      </select>` : "";
+      return `<div class="lu-row">
+        <div class="lu-row-head">
+          <span class="lu-level">Nível ${s.level}${s.marco?`<span class="lu-marco">Ação de Marco</span>`:""}</span>
+          <select class="input" data-lu="${s.level}" data-luf="categoria" onchange="wizLevelUpChange(${s.level},'categoria',this.value)">
+            ${opts}
+          </select>
+        </div>
+        ${attrSel?`<div class="lu-target"><label>Atributo:</label>${attrSel}</div>`:""}
+        ${sel?`<div class="lu-hint"><b>${escapeHtml(sel.categoria)}</b> • ${escapeHtml(sel.permite||"")} <i>${escapeHtml(sel.regra||"")}</i></div>`:""}
+        <div class="lu-target">
+          <label>Detalhe:</label>
+          <input class="input" type="text" data-lu="${s.level}" data-luf="alvo" value="${escapeHtml(e.alvo||"")}" oninput="wizLevelUpChange(${s.level},'alvo',this.value)" placeholder="O que foi comprado (técnica, magia, caminho, equipamento...)" ${s.marco?'style="border-color:var(--hope);"':""}>
+        </div>
+      </div>`;
+    }).join("")}
+  </div>`;
+}
+function wizLevelUpChange(level, field, value){
+  const e = wizLevelUpEnsure(level);
+  if(field==="categoria"){ e.categoria = value; e.atributo = null; }
+  else if(field==="atributo"){ e.atributo = value||null; }
+  else if(field==="alvo"){ e.alvo = value; return; }
+  renderWizardStep();
+}
+function wizSyncLevelUpFromInputs(){
+  if(!Array.isArray(wiz.levelUp)) return;
+  document.querySelectorAll("#wizardBody [data-lu]").forEach(el=>{
+    const l = Number(el.dataset.lu); if(!l) return;
+    const e = wizLevelUpEnsure(l);
+    const f = el.dataset.luf;
+    if(f==="categoria"){ e.categoria = el.value; if(e.categoria!=="Atributo") e.atributo=null; }
+    else if(f==="atributo") e.atributo = el.value||null;
+    else if(f==="alvo") e.alvo = el.value;
+  });
+}
+function wizBlocked(itemId){
+  const s = DATA.spells.find(x=>x.id===itemId);
+  const t = !s?DATA.techniques.find(x=>x.id===itemId):null;
+  const it = DATA.items.find(x=>x.id===itemId);
+  const cls = DATA.classes.find(c=>c.id===wiz.classId);
+  const isMagic = cls && cls.type==="Mágica";
+  const maxTier = wizTierForLevel(wiz.level);
+  if(s||t){
+    const f = s||t;
+    alert(`${f.name} está bloqueado: requer Nível ${f.levelMin} (${isMagic?"Círculo":"Grau"} ${isMagic?f.circle:f.grade}). Seu personagem acessa até ${isMagic?"Círculo":"Grau"} ${wizTierRoman(maxTier)}.`);
+    return;
+  }
+  if(it){
+    alert(`${it.name} está bloqueado: requer acesso ao Tier ${wizTierRoman(it.tier)}. Seu personagem acessa até o Tier ${wizTierRoman(maxTier)} (Nível ${wiz.level}).`);
+    return;
+  }
+  alert("Este item está bloqueado pelo Tier atual do personagem.");
+}
+
 /* ---------- Save ---------- */
 function wizSave(){
   wizSyncAttrsFromInputs();
   if(wiz.step === 7) wizSyncExpPartFromInputs();
+  if(wiz.step === 8) wizSyncLevelUpFromInputs();
   const errs = wizValidate();
   if(errs.length){ alert("Corrija os erros:\n• "+errs.join("\n• ")); return; }
 
   const race = DATA.races.find(r=>r.id===wiz.raceId);
   const cls = DATA.classes.find(c=>c.id===wiz.classId);
+  const isMagic = cls && cls.type==="Mágica";
+
+  // bônus das Ações de Level Up
+  const level = Math.max(1, Number(wiz.level)||1);
+  const levelUp = (wiz.levelUp||[])
+    .filter(a=>a.categoria)
+    .map(a=>({ level:a.level, marco:!!a.marco, categoria:a.categoria, atributo:a.atributo||null, alvo:(a.alvo||"").trim() }))
+    .sort((a,b)=>(a.level||0)-(b.level||0));
+  const attrBonus = {};
+  levelUp.forEach(a=>{
+    if(a.categoria==="Atributo" && a.atributo) attrBonus[a.atributo]=(attrBonus[a.atributo]||0)+1;
+  });
+  const vidaActs = levelUp.filter(a=>a.categoria==="Vida").length;
+  const manaActs = levelUp.filter(a=>a.categoria==="Mana").length;
+  const pranaActs = levelUp.filter(a=>a.categoria==="Prana").length;
 
   const attrs = {...wiz.attributes};
   const raceBon = wizRaceBonus();
-  ATTR_KEYS.forEach(k=>{ attrs[k] = (wiz.attributes[k]||0) + (raceBon[k]||0); });
+  ATTR_KEYS.forEach(k=>{ attrs[k] = (wiz.attributes[k]||0) + (raceBon[k]||0) + (attrBonus[k]||0); });
 
   const weaponNames = (wiz._selectedWeapons||[]).map(id=>{ const it=DATA.items.find(x=>x.id===id); return it?it.name:""; }).filter(Boolean);
   const armorObj = wiz._selectedArmor ? DATA.items.find(x=>x.id===wiz._selectedArmor) : null;
@@ -9267,6 +9540,7 @@ function wizSave(){
     path: wiz.path, level: wiz.level,
     attributes: attrs,
     raceBonus: raceBon, raceBonusAttr: wiz.raceBonusAttr,
+    levelUp: levelUp,
     vida: null, vidaMax: null,
     recurso: null, recursoMax: null,
     lucidez: null, lucidezMax: null,
@@ -9281,6 +9555,15 @@ function wizSave(){
     resourceName: cls?cls.resource:"Recurso"
   };
   autofillChar(obj, cls);
+  // Máximos derivados da progressão: +1 Vida por Nível, +1 pela Ação Vida,
+  // Ação Mana +5 (mágicas) / Ação Prana +2 (físicas)
+  const isPhysicalS = cls ? cls.type==="Física" : true;
+  obj.vidaMax = (isPhysicalS?7:6) + Math.max(0, level-1) + vidaActs;
+  obj.recursoMax = (cls?cls.resourceMax:20) + (isPhysicalS? pranaActs*2 : manaActs*5);
+  obj.lucidezMax = cls?cls.lucidityMax:(isPhysicalS?80:100);
+  obj.vida = obj.vida===null ? obj.vidaMax : Math.min(Number(obj.vida)||0, obj.vidaMax);
+  obj.recurso = obj.recurso===null ? obj.recursoMax : Math.min(Number(obj.recurso)||0, obj.recursoMax);
+  obj.lucidez = obj.lucidez===null ? obj.lucidezMax : Math.min(Number(obj.lucidez)||0, obj.lucidezMax);
 
   if(wizEditId){
     const i = DATA.characters.findIndex(x=>x.id===wizEditId);
