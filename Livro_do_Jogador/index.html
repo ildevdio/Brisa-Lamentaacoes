@@ -8676,15 +8676,41 @@ document.getElementById("btnExport").addEventListener("click",()=>{
   showToast("Dados exportados.");
 });
 document.getElementById("btnImport").addEventListener("click",()=>document.getElementById("importFile").click());
+function mergeImportedCharacters(importedChars){
+  const currentChars = [...DATA.characters];
+  const ids = new Set(currentChars.map(p=>p && p.id));
+  const added = structuredCloneSafe(importedChars||[]).map(p=>{
+    if(!p || typeof p !== "object") return null;
+    // Se o id já existe no destino, gera um novo para ADICIONAR sem sobrescrever
+    if(p.id && ids.has(p.id)) p.id = uid("p");
+    ids.add(p.id);
+    return p;
+  }).filter(Boolean);
+  DATA.characters = currentChars.concat(added);
+  return added.length;
+}
 document.getElementById("importFile").addEventListener("change",(e)=>{
   const file = e.target.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = ()=>{
     try{
       const parsed = JSON.parse(reader.result);
-      DATA = Object.assign(structuredCloneSafe(DEFAULT_DATA), parsed);
+      // Arquivo com uma lista simples de personagens (apenas as ficha/objeto de personagem)
+      if(Array.isArray(parsed)){
+        const n = mergeImportedCharacters(parsed);
+        persist(); renderAll();
+        showToast(`${n} personagem(ns) importado(s) e adicionado(s) aos existentes.`);
+        return;
+      }
+      const incoming = structuredCloneSafe(parsed);
+      // Personagens atuais são preservados e os importados são ADICIONADOS (não substituem).
+      const added = mergeImportedCharacters(incoming.characters);
+      // Demais coleções seguem o comportamento original de importação (merge sobre o conteúdo padrão).
+      const merged = Object.assign(structuredCloneSafe(DEFAULT_DATA), incoming);
+      merged.characters = DATA.characters;
+      DATA = merged;
       persist(); renderAll();
-      showToast("Dados importados com sucesso.");
+      showToast(`Dados importados. ${added} personagem(ns) adicionado(s) aos existentes.`);
     }catch(err){ alert("Arquivo inválido: "+err.message); }
   };
   reader.readAsText(file);
