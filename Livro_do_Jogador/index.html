@@ -8841,7 +8841,7 @@ function openCharForm(id){
     wiz.traits = p.traits||"";
     wiz.notes = p.notes||"";
     const race = DATA.races.find(r=>r.id===wiz.raceId);
-    wiz.hasRaceChoice = race && /escolha/i.test(race.bonus||"");
+    wiz.hasRaceChoice = race && wizHasRaceChoice(race.bonus);
     // remove o bônus racial aplicado na criação, devolvendo a distribuição "bruta"
     const savedBonus = p.raceBonus || {};
     ATTR_KEYS.forEach(k=>{ wiz.attributes[k] = Math.max(-1, (wiz.attributes[k]||0) - (savedBonus[k]||0)); });
@@ -8892,11 +8892,22 @@ document.getElementById("wizardOverlay").addEventListener("click",(e)=>{
 function wizTotalPoints(){
   return ATTR_KEYS.reduce((s,k)=>s+(wiz.attributes[k]||0),0);
 }
+function wizHasRaceChoice(bonus){
+  return /escolha|\bou\b/i.test(bonus||"");
+}
 function wizRaceBonus(){
-  if(!wiz.raceId || !wiz.hasRaceChoice || !wiz.raceBonusAttr) return {};
-  const b = {};
-  b[wiz.raceBonusAttr] = 1;
-  return b;
+  if(!wiz.raceId) return {};
+  const race = DATA.races.find(r=>r.id===wiz.raceId);
+  if(!race || !race.bonus) return {};
+  if(wiz.hasRaceChoice){
+    if(!wiz.raceBonusAttr) return {};
+    const b = {};
+    b[wiz.raceBonusAttr] = 1;
+    return b;
+  }
+  // Raças com bônus fixo (ex.: "+1 Força") também são somados na criação e na edição
+  const auto = wizParseRaceBonus(race.bonus);
+  return auto ? {[auto]:1} : {};
 }
 function wizFinalAttr(key){
   return (wiz.attributes[key]||0) + (wizRaceBonus()[key]||0);
@@ -9025,7 +9036,7 @@ function wizSyncCurrentStep(){
     wiz.raceBonusAttr = null;
     const race = DATA.races.find(r=>r.id===wiz.raceId);
     if(race){
-      wiz.hasRaceChoice = /escolha/i.test(race.bonus||"");
+wiz.hasRaceChoice = wizHasRaceChoice(race.bonus);
       // preserva o bônus escolhido ao passar pela etapa na edição de um personagem existente
       if(prevChoice && prevBonusAttr) wiz.raceBonusAttr = prevBonusAttr;
     }
@@ -9110,7 +9121,7 @@ function wizSelectRace(id){
     wizClearSide();
   } else {
     wiz.raceId = id;
-    wiz.hasRaceChoice = /escolha/i.test(race.bonus||"");
+    wiz.hasRaceChoice = wizHasRaceChoice(race.bonus);
     wiz.raceBonusAttr = null;
     wizShowRaceDetail(race);
   }
