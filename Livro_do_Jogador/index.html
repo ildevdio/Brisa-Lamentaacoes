@@ -7351,6 +7351,13 @@ function structuredCloneSafe(obj){ return JSON.parse(JSON.stringify(obj)); }
 function persist(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA)); }
 function uid(prefix){ return prefix + "_" + Math.random().toString(36).slice(2,9); }
 
+/* Constantes de atributos declaradas no início para evitar TDZ:
+   chamadas de init (renderAll/belInitTabs) usam ATTR_NAMES neste ponto. */
+const ATTR_KEYS = ["forca","agilidade","precisao","instinto","presenca","inteligencia"];
+const ATTR_NAMES = {forca:"Força",agilidade:"Agilidade",precisao:"Precisão",instinto:"Instinto",presenca:"Presença",inteligencia:"Inteligência"};
+const ATTR_DISTRIBUTION = [{val:2,count:1},{val:1,count:2},{val:0,count:2},{val:-1,count:1}];
+const ATTR_SLOTS = ATTR_DISTRIBUTION.flatMap(d=>Array(d.count).fill(d.val));
+
 function showToast(msg){
   const t = document.getElementById("toast");
   t.textContent = msg;
@@ -8761,11 +8768,6 @@ if(typeof loadCommunity==="function" && typeof commApply==="function"){
 /* =====================================================================
    WIZARD DE CRIAÇÃO DE PERSONAGEM
    ===================================================================== */
-const ATTR_KEYS = ["forca","agilidade","precisao","instinto","presenca","inteligencia"];
-const ATTR_NAMES = {forca:"Força",agilidade:"Agilidade",precisao:"Precisão",instinto:"Instinto",presenca:"Presença",inteligencia:"Inteligência"};
-const ATTR_DISTRIBUTION = [{val:2,count:1},{val:1,count:2},{val:0,count:2},{val:-1,count:1}];
-const ATTR_SLOTS = ATTR_DISTRIBUTION.flatMap(d=>Array(d.count).fill(d.val));
-
 /* ---------- Tier & Ações de Level Up helpers ---------- */
 const WIZ_ROMAN = ["I","II","III","IV","V","VI","VII"];
 const WIZ_MARCO_LEVELS = [5,10,15,20];
